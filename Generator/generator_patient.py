@@ -3,12 +3,17 @@ import csv
 from faker import Faker
 from random import randint
 import random
+import decimal
+
 
 
 # define the number os patients
 RECORD_COUNT = 50
+# define the patient condition
 Condition = ["diabetes","hypertension","heart disease","none"]
+# create the faker
 fake = Faker()
+
 # function to create the csv file with patient information created by faker
 def create_csv_file():
     # create the columns
@@ -17,6 +22,7 @@ def create_csv_file():
                       'Name',
                       'Age',
                       'Condition',
+                      'BMI',
                       'E-mail',
                       'Phone',
                       'Address'
@@ -30,8 +36,9 @@ def create_csv_file():
                 {
                     'ID': fake.unique.random_int(min=1, max=50),
                     'Name': fake.name(),
-                    'Age': randint(18, 70),
+                    'Age': randint(18, 90),
                     'Condition': random.choice(Condition),
+                    'BMI': random.randint(1855, 3000)/100,
                     'E-mail': fake.email(),
                     'Phone': fake.phone_number(),
                     'Address': fake.address(),
