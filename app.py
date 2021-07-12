@@ -66,7 +66,7 @@ def get_data():
     df['bmi_segment'] = df['bmi'].apply(lambda bmi: get_bmi_segment(bmi))
     df['location'] = df.apply(lambda row: get_location(row['longitude'], row['latitude'], provinces_json), axis=1)
 
-    cols_to_keep = ['timestamp', 'longitude', 'bmi_segment', 'latitude', 'condition', 'status', 'gender', 'age_segment', 'location']
+    cols_to_keep = ['timestamp', 'longitude', 'bmi_segment', 'latitude', 'condition', 'status', 'gender', 'age_segment','location']
     df_clean = df[cols_to_keep].dropna()
     return df_clean.to_json(orient='records')
 

@@ -2,10 +2,11 @@ queue()
     .defer(d3.json, "/data")
     .await(makeGraphs);
 
-function makeGraphs(error, recordsJson) {
+function makeGraphs(error, recordsJson, patientsJson ) {
 	
 	//Clean data
 	var records = recordsJson;
+	var patients = patientsJson;
 	var dateFormat = d3.time.format("%Y-%m-%d %H:%M:%S");
 	
 	records.forEach(function(d) {
@@ -32,6 +33,7 @@ function makeGraphs(error, recordsJson) {
 
 	//Group Data
 	var numRecordsByDate = dateDim.group();
+	var numPatientsByDate = dateDim.group();
 	var genderGroup = genderDim.group();
 	var statusGroup = statusDim.group();
 	var ageSegmentGroup = ageSegmentDim.group();
@@ -48,6 +50,7 @@ function makeGraphs(error, recordsJson) {
 
     //Charts
     var numberRecordsND = dc.numberDisplay("#number-records-nd");
+    var numberPatientsND = dc.numberDisplay("#number-patients-nd");
 	var timeChart = dc.barChart("#time-chart");
 	var genderChart = dc.rowChart("#gender-row-chart");
 	var statusChart = dc.rowChart("#status-row-chart");
@@ -62,6 +65,12 @@ function makeGraphs(error, recordsJson) {
 		.formatNumber(d3.format("d"))
 		.valueAccessor(function(d){return d; })
 		.group(all);
+
+	numberPatientsND
+        .formatNumber(d3.format("d"))
+        .valueAccessor(function(d){return d; })
+        .group(all);
+
 
 	timeChart
 		.width(650)

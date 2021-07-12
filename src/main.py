@@ -39,7 +39,7 @@ def create_unique_id():
     """
     This function creates a hexadecimal UUID (Unique ID) for each reading
     that can be used as primary key for database
-    :return: reading_id
+    : return: reading_id
     """
     reading_id = ''.join(uuid.uuid4().hex)
     return reading_id
