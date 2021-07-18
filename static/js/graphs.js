@@ -2,11 +2,10 @@ queue()
     .defer(d3.json, "/data")
     .await(makeGraphs);
 
-function makeGraphs(error, recordsJson, patientsJson ) {
+function makeGraphs(error, recordsJson) {
 	
 	//Clean data
 	var records = recordsJson;
-	var patients = patientsJson;
 	var dateFormat = d3.time.format("%Y-%m-%d %H:%M:%S");
 	
 	records.forEach(function(d) {
@@ -25,18 +24,25 @@ function makeGraphs(error, recordsJson, patientsJson ) {
 	var genderDim = ndx.dimension(function(d) { return d["gender"]; });
 	var statusDim = ndx.dimension(function(d) { return d["status"]; });
 	var ageSegmentDim = ndx.dimension(function(d) { return d["age_segment"]; });
+	var bloodpressureDim = ndx.dimension(function(d) { return d["bloodpressure_segment"]; });
+	var temperatureDim = ndx.dimension(function(d) { return d["temperature_segment"]; });
+	var heartrateDim = ndx.dimension(function(d) { return d["heartrate_segment"]; });
+	var bloodsugarDim = ndx.dimension(function(d) { return d["bloodsugar_segment"]; });
 	var conditionDim = ndx.dimension(function(d) { return d["condition"]; });
 	var locationDim = ndx.dimension(function(d) { return d["location"]; });
 	var bmiDim = ndx.dimension(function(d) { return d["bmi_segment"]; });
+	var patientDim = ndx.dimension(function(d) { return d["id"]; });
 	var allDim = ndx.dimension(function(d) {return d;});
-
 
 	//Group Data
 	var numRecordsByDate = dateDim.group();
-	var numPatientsByDate = dateDim.group();
 	var genderGroup = genderDim.group();
 	var statusGroup = statusDim.group();
 	var ageSegmentGroup = ageSegmentDim.group();
+	var bloodpressureGroup = bloodpressureDim.group();
+	var temperatureGroup = temperatureDim.group();
+	var heartrateGroup = heartrateDim.group();
+	var bloodsugarGroup = bloodsugarDim.group();
 	var ConditionGroup = conditionDim.group();
 	var locationGroup = locationDim.group();
 	var bmiGroup = bmiDim.group();
@@ -47,30 +53,25 @@ function makeGraphs(error, recordsJson, patientsJson ) {
 	var minDate = dateDim.bottom(1)[0]["timestamp"];
 	var maxDate = dateDim.top(1)[0]["timestamp"];
 
-
     //Charts
     var numberRecordsND = dc.numberDisplay("#number-records-nd");
-    var numberPatientsND = dc.numberDisplay("#number-patients-nd");
 	var timeChart = dc.barChart("#time-chart");
 	var genderChart = dc.rowChart("#gender-row-chart");
 	var statusChart = dc.rowChart("#status-row-chart");
 	var bmiChart = dc.rowChart("#bmi-row-chart");
 	var ageSegmentChart = dc.rowChart("#age-segment-row-chart");
+	var bloodpressureChart = dc.rowChart("#bloodpressure-segment-row-chart");
+	var temperatureChart = dc.rowChart("#temperature-segment-row-chart");
+	var heartrateChart = dc.rowChart("#heartrate-segment-row-chart");
+	var bloodsugarChart = dc.rowChart("#bloodsugar-segment-row-chart");
 	var ConditionChart = dc.rowChart("#condition-row-chart");
 	var locationChart = dc.rowChart("#location-row-chart");
-
 
 
 	numberRecordsND
 		.formatNumber(d3.format("d"))
 		.valueAccessor(function(d){return d; })
 		.group(all);
-
-	numberPatientsND
-        .formatNumber(d3.format("d"))
-        .valueAccessor(function(d){return d; })
-        .group(all);
-
 
 	timeChart
 		.width(650)
@@ -83,12 +84,51 @@ function makeGraphs(error, recordsJson, patientsJson ) {
 		.elasticY(true)
 		.yAxis().ticks(4);
 
-
 	genderChart
         .width(300)
         .height(100)
         .dimension(genderDim)
         .group(genderGroup)
+        .ordering(function(d) { return -d.value })
+        .colors(['#47d66d'])
+        .elasticX(true)
+        .xAxis().ticks(4);
+
+    bloodpressureChart
+        .width(300)
+        .height(100)
+        .dimension(bloodpressureDim)
+        .group(bloodpressureGroup)
+        .ordering(function(d) { return -d.value })
+        .colors(['#47d66d'])
+        .elasticX(true)
+        .xAxis().ticks(4);
+
+    temperatureChart
+        .width(300)
+        .height(100)
+        .dimension(temperatureDim)
+        .group(temperatureGroup)
+        .ordering(function(d) { return -d.value })
+        .colors(['#47d66d'])
+       .elasticX(true)
+       .xAxis().ticks(4);
+
+    heartrateChart
+        .width(300)
+        .height(100)
+        .dimension(heartrateDim)
+        .group(heartrateGroup)
+        .ordering(function(d) { return -d.value })
+        .colors(['#47d66d'])
+        .elasticX(true)
+        .xAxis().ticks(4);
+
+	bloodsugarChart
+        .width(300)
+        .height(100)
+        .dimension(bloodsugarDim)
+        .group(bloodsugarGroup)
         .ordering(function(d) { return -d.value })
         .colors(['#47d66d'])
         .elasticX(true)
