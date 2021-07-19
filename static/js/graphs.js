@@ -3,11 +3,11 @@ queue()
     .await(makeGraphs);
 
 function makeGraphs(error, recordsJson) {
-	
+
 	//Clean data
 	var records = recordsJson;
 	var dateFormat = d3.time.format("%Y-%m-%d %H:%M:%S");
-	
+
 	records.forEach(function(d) {
 		d["timestamp"] = dateFormat.parse(d["timestamp"]);
 		d["timestamp"].setMinutes(0);
@@ -56,14 +56,14 @@ function makeGraphs(error, recordsJson) {
     //Charts
     var numberRecordsND = dc.numberDisplay("#number-records-nd");
 	var timeChart = dc.barChart("#time-chart");
-	var genderChart = dc.rowChart("#gender-row-chart");
+	var genderChart = dc.pieChart("#gender-row-chart");
 	var statusChart = dc.pieChart("#status-row-chart");
-	var bmiChart = dc.rowChart("#bmi-row-chart");
-	var ageSegmentChart = dc.rowChart("#age-segment-row-chart");
-	var bloodpressureChart = dc.rowChart("#bloodpressure-segment-row-chart");
+	var bmiChart = dc.pieChart("#bmi-row-chart");
+	var ageSegmentChart = dc.pieChart("#age-segment-row-chart");
+	var bloodpressureChart = dc.pieChart("#bloodpressure-segment-row-chart");
 	var temperatureChart = dc.pieChart("#temperature-segment-row-chart");
-	var heartrateChart = dc.rowChart("#heartrate-segment-row-chart");
-	var bloodsugarChart = dc.rowChart("#bloodsugar-segment-row-chart");
+	var heartrateChart = dc.pieChart("#heartrate-segment-row-chart");
+	var bloodsugarChart = dc.pieChart("#bloodsugar-segment-row-chart");
 	var ConditionChart = dc.pieChart("#condition-row-chart");
 	var locationChart = dc.rowChart("#location-row-chart");
 
@@ -86,53 +86,54 @@ function makeGraphs(error, recordsJson) {
 
 	genderChart
         .width(300)
-        .height(100)
+        .height(310)
+        .slicesCap(4)
+        .innerRadius(60)
         .dimension(genderDim)
         .group(genderGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#47d66d'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .legend(dc.legend())
+        .colors(['#52006A', '#4A47A3'])
 
     bloodpressureChart
         .width(300)
-        .height(100)
+        .height(310)
+        .slicesCap(4)
+        .innerRadius(60)
         .dimension(bloodpressureDim)
         .group(bloodpressureGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#47d66d'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .legend(dc.legend())
+        .colors(['#1a2441', '#1b6145', '#697b30', '#c87b7c', '#cda2e0', '#c6e1f1'])
 
     temperatureChart
-    .width(300)
-    .height(310)
-    .slicesCap(4)
-    .innerRadius(60)
-    .dimension(temperatureDim)
-    .group( temperatureGroup)
-    .legend(dc.legend())
-    .colors(['#2e1e3b', '#413d7b', '#37659e', '#348fa7', '#40b7ad', '#8bdab2'])
+        .width(300)
+        .height(310)
+        .slicesCap(4)
+        .innerRadius(60)
+        .dimension(temperatureDim)
+        .group( temperatureGroup)
+        .legend(dc.legend())
+        .colors(['#2e1e3b', '#413d7b', '#37659e', '#348fa7', '#40b7ad', '#8bdab2'])
 
     heartrateChart
         .width(300)
-        .height(100)
+        .height(310)
+        .slicesCap(4)
+        .innerRadius(60)
         .dimension(heartrateDim)
         .group(heartrateGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#47d66d'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .legend(dc.legend())
+        .colors(['#2e1e3b', '#413d7b', '#37659e', '#348fa7', '#40b7ad', '#8bdab2'])
+
 
 	bloodsugarChart
-        .width(300)
-        .height(100)
-        .dimension(bloodsugarDim)
-        .group(bloodsugarGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#47d66d'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+         .width(300)
+         .height(310)
+         .slicesCap(4)
+         .innerRadius(60)
+         .dimension(bloodsugarDim)
+         .group(bloodsugarGroup)
+         .legend(dc.legend())
+         .colors(['#2e1e3b', '#413d7b', '#37659e', '#348fa7', '#40b7ad', '#8bdab2'])
 
 	statusChart
         .width(300)
@@ -145,24 +146,23 @@ function makeGraphs(error, recordsJson) {
 
 
 	bmiChart
-        .width(300)
-        .height(310)
+        .width(400)
+        .height(300)
+        .slicesCap(4)
+        .innerRadius(60)
         .dimension(bmiDim)
         .group(bmiGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#d64783'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .colors(['#221150', '#5f187f', '#982d80', '#d3436e', '#f8765c', '#febb81'])
 
 	ageSegmentChart
-		.width(300)
-		.height(150)
-        .dimension(ageSegmentDim)
-        .group(ageSegmentGroup)
-        .colors(['#73dafa'])
-        .elasticX(true)
-        .labelOffsetY(10)
-        .xAxis().ticks(4);
+		 .width(300)
+         .height(300)
+         .slicesCap(4)
+         .innerRadius(60)
+         .dimension(ageSegmentDim)
+         .group(ageSegmentGroup)
+         .colors(['#221150', '#5f187f', '#982d80', '#d3436e', '#f8765c', '#febb81'])
+
 
 	ConditionChart
 		.width(300)
@@ -219,7 +219,7 @@ function makeGraphs(error, recordsJson) {
 		dcChart.on("filtered", function (chart, filter) {
 			map.eachLayer(function (layer) {
 				map.removeLayer(layer)
-			}); 
+			});
 			drawMap();
 		});
 	});
