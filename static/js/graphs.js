@@ -57,14 +57,14 @@ function makeGraphs(error, recordsJson) {
     var numberRecordsND = dc.numberDisplay("#number-records-nd");
 	var timeChart = dc.barChart("#time-chart");
 	var genderChart = dc.rowChart("#gender-row-chart");
-	var statusChart = dc.rowChart("#status-row-chart");
+	var statusChart = dc.pieChart("#status-row-chart");
 	var bmiChart = dc.rowChart("#bmi-row-chart");
 	var ageSegmentChart = dc.rowChart("#age-segment-row-chart");
 	var bloodpressureChart = dc.rowChart("#bloodpressure-segment-row-chart");
-	var temperatureChart = dc.rowChart("#temperature-segment-row-chart");
+	var temperatureChart = dc.pieChart("#temperature-segment-row-chart");
 	var heartrateChart = dc.rowChart("#heartrate-segment-row-chart");
 	var bloodsugarChart = dc.rowChart("#bloodsugar-segment-row-chart");
-	var ConditionChart = dc.rowChart("#condition-row-chart");
+	var ConditionChart = dc.pieChart("#condition-row-chart");
 	var locationChart = dc.rowChart("#location-row-chart");
 
 
@@ -105,14 +105,14 @@ function makeGraphs(error, recordsJson) {
         .xAxis().ticks(4);
 
     temperatureChart
-        .width(300)
-        .height(100)
-        .dimension(temperatureDim)
-        .group(temperatureGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#47d66d'])
-       .elasticX(true)
-       .xAxis().ticks(4);
+    .width(300)
+    .height(310)
+    .slicesCap(4)
+    .innerRadius(60)
+    .dimension(temperatureDim)
+    .group( temperatureGroup)
+    .legend(dc.legend())
+    .colors(['#2e1e3b', '#413d7b', '#37659e', '#348fa7', '#40b7ad', '#8bdab2'])
 
     heartrateChart
         .width(300)
@@ -137,12 +137,12 @@ function makeGraphs(error, recordsJson) {
 	statusChart
         .width(300)
         .height(300)
+        .slicesCap(4)
+        .innerRadius(60)
         .dimension(statusDim)
         .group(statusGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#fa8764'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .colors(['#221150', '#5f187f', '#982d80', '#d3436e', '#f8765c', '#febb81'])
+
 
 	bmiChart
         .width(300)
@@ -167,12 +167,12 @@ function makeGraphs(error, recordsJson) {
 	ConditionChart
 		.width(300)
 		.height(310)
+		.slicesCap(4)
+        .innerRadius(60)
         .dimension(conditionDim)
         .group(ConditionGroup)
-        .ordering(function(d) { return -d.value })
-        .colors(['#b673fa'])
-        .elasticX(true)
-        .xAxis().ticks(4);
+        .legend(dc.legend())
+        .colors(['#46327e', '#365c8d', '#277f8e', '#1fa187', '#4ac16d', '#a0da39'])
 
     locationChart
     	.width(200)
