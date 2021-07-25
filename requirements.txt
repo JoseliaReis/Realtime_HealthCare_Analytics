@@ -1,0 +1,11 @@
+aiokafka
+asyncio
+cassandra-driver
+aiocassandra
+flask
+flask-sqlalchemy
+flask-login
+werkzeug
+pandas
+dash==1.12.0
+gunicorn==19.9.0
