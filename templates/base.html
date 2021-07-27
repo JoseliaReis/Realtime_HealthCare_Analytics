@@ -20,13 +20,14 @@
                     <div class="navbar-end">
                         {% if current_user.is_authenticated %}
                         <a href="{{ url_for('main.index') }}" class="navbar-item">
-                            Dashboards
+                            Home
                         </a>
                         {% endif %}
                         {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('main.profile') }}" class="navbar-item">
-                            Profile
+                        <a href= "/dash" class="navbar-item">
+                            Dashboards
                         </a>
+
                         {% endif %}
                         {% if not current_user.is_authenticated %}
                         <a href="{{ url_for('auth.login') }}" class="navbar-item">

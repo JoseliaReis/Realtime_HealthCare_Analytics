@@ -12,6 +12,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 
 # Multi-dropdown options
+from flask_login import login_required
+
 from controls import COUNTIES, WELL_STATUSES, WELL_TYPES, WELL_COLORS
 
 
@@ -73,7 +75,10 @@ layout = dict(autosize=True, automargin=True, margin=dict(l=30, r=30, b=20, t=40
               )
 
 # Create app layout
-app.layout = html.Div(
+"""Function to run dash inside Flask Application"""
+def create_dash_application(flask_app):
+    dash_app = dash.Dash(server=flask_app, name="Dashboard", url_base_pathname="/dash/")
+    dash_app.layout = html.Div(
     [
         dcc.Store(id="aggregate_data"),
         # empty Div to trigger javascript file for graph resizing
@@ -255,6 +260,13 @@ app.layout = html.Div(
     id="mainContainer",
     style={"display": "flex", "flex-direction": "column"},
 )
+    """Function to make dashboards private """
+    for view_function in dash_app.server.view_functions:
+        if view_function.startswith(dash_app.config.url_base_pathname):
+            dash_app.server.view_functions[view_function] = login_required(
+                dash_app.server.view_functions[view_function]
+            )
+    return dash_app
 
 
 # Helper functions
