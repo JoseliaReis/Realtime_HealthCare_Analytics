@@ -31,7 +31,7 @@ fieldnames = ['id',
               'latitude']
 
 PATIENT_COUNT = 100
-SENSOR_COUNT = 100
+SENSOR_COUNT = 1000
 fake = Faker(['en-IE']) # Use Ireland Locale
 
 
@@ -253,3 +253,44 @@ def create_sensor_content():
     }
     # this will return as dictionary
     return payload
+
+def write_to_csv():
+    """
+    This function writes a payload to csv file to view if information is correct
+    :return: writes csv file to hard drive
+    """
+
+    # the ./ means that the code will be stored in the same folder that we are running
+    csv_file = "./healthcare_data.csv"
+
+    # error checking
+    try:
+        print("Generating Healthcare Data")
+        # create a new csv file using csv_file variable
+        # open means new csv file
+        # w means write
+        with open(csv_file, 'w') as csvfile:
+            # use the csv file that were generated
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            # write the header/column names in csv file
+            writer.writeheader()
+            print("Generating Patient Data for {0} patients".format(PATIENT_COUNT))
+            for i in range(PATIENT_COUNT):
+                # create 50 patients
+                patient = create_patient_content()
+                print("Generating {0} Sensor Records for patient id {1}".format(SENSOR_COUNT, patient["id"]))
+                for j in range(1000):
+                    # create the payload/sensor content
+                    sensor = create_sensor_content()
+                    # join the patient data
+                    records = {**patient, **sensor}
+                    # write the payload/content to the csv file
+                    writer.writerow(records)
+    except IOError:
+        print("I/O error")
+
+
+# This is the main method
+if __name__ == '__main__':
+    # call the function to write to csv
+    write_to_csv()

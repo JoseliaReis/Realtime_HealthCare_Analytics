@@ -574,7 +574,7 @@ def make_aggregate_figure(well_statuses, well_types, year_slider, main_graph_hov
             line=dict(shape="spline", smoothing="2", color="#849E68"),
         ),
     ]
-    layout_aggregate["title"] = "Aggregate: " + WELL_TYPES[well_type]
+    layout_aggregate["title"] = "Blood Pressure: " + WELL_TYPES[well_type]
 
     figure = dict(data=data, layout=layout_aggregate)
     return figure
