@@ -3,8 +3,6 @@ from flask import Blueprint, render_template, flash
 from flask_login import login_required, current_user
 from __init__ import create_app, db
 from dashboard import create_dash_application
-
-2222
 # main blueprint
 main = Blueprint('main', __name__)
 
