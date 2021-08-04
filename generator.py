@@ -132,6 +132,9 @@ def create_blood_sugar_level(emergency=False):
     return blood_sugar_level
 
 def create_phone_number():
+    """This function will create phone number based on Irish Number, which has +353
+    as country code and 81, 82, 88 and 84 as prefix
+     The number will be generate using faker function"""
     country_code = "+353"
     prefix = ["-81", "-82", "-88", "-84"]
     digits = ""
@@ -179,8 +182,8 @@ def create_time_of_measurement():
 
 def create_dublin_address():
     """
-
-    :return:
+    This funcion will create address based on Dublin areas
+    :return: adress
     """
     postcodes = ['Dublin 1','Dublin 2', 'Dublin 3', 'Dublin 4', 'Dublin 5', 'Dublin 6',
                  'Dublin 7','Dublin 8', 'Dublin 9', 'Dublin 10', 'Dublin 11', 'Dublin 12',
@@ -226,8 +229,7 @@ def create_health_status():
 
 
 def create_patient_content():
-    """
-
+    """ This funcion will create the patient content with gender, name, id, phone number, addrees, helth and device id
     :return:
     """
     health = create_health_status()
