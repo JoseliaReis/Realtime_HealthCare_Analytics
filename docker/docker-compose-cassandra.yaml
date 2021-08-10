@@ -4,7 +4,7 @@ services:
     image: cassandra:latest
     container_name: cassandra
     volumes:
-      - ./db/cassandra_data:/var/lib/cassandra
+      - ../cassandra/db/cassandra_data:/var/lib/cassandra
     ports:
       - 9042:9042
     environment:
@@ -29,7 +29,7 @@ services:
       cassandra:
         condition: service_healthy
     volumes:
-      - ./db/cassandra_boostrap.cql:/schema.cql
+      - ../cassandra/cassandra_boostrap.cql:/schema.cql
     command: /bin/bash -c "echo loading cassandra keyspace && cqlsh cassandra -f /schema.cql"
 
 networks:

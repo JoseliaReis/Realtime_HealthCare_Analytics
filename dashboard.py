@@ -1,84 +1,59 @@
 # Import required libraries
-import pickle
+
 import copy
 import pathlib
-import urllib.request
+
 import dash
-import math
-import datetime as dt
+import asyncio
 import pandas as pd
 from dash.dependencies import Input, Output, State, ClientsideFunction
 import dash_core_components as dcc
 import dash_html_components as html
+import plotly.graph_objects as go
 
-# Multi-dropdown options
-from flask_login import login_required
 
-from controls import COUNTIES, WELL_STATUSES, WELL_TYPES, WELL_COLORS
-
+# Import Utility functions from the util directory/package
+from utils import functions as util
+from utils import config as config
 
 # get relative data folder
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
 
-app = dash.Dash( __name__,
-                 meta_tags=[{"name": "viewport", "content": "width=device-width"}],)
+app = dash.Dash(__name__,
+                meta_tags=[{"name": "viewport", "content": "width=device-width"}], )
 
 app.title = "RTHCA: Realtime Healthcare Analytics "
 server = app.server
 
-# Create controls
-county_options = [
-    {"label": str(COUNTIES[county]), "value": str(county)} for county in COUNTIES
-]
 
-well_status_options = [
-    {"label": str(WELL_STATUSES[well_status]), "value": str(well_status)}
-    for well_status in WELL_STATUSES
-]
+# --------- LOAD DATA --------- #
 
-well_type_options = [
-    {"label": str(WELL_TYPES[well_type]), "value": str(well_type)}
-    for well_type in WELL_TYPES
-]
+source = "csv"
 
+if source == 'cassandra':
+    loop = asyncio.get_event_loop()
+    df = loop.run_until_complete(util.read_cassandra(config.host,
+                                                     config.username, config.password, config.keyspace))
 
-# Download pickle file
-urllib.request.urlretrieve(
-    "https://raw.githubusercontent.com/plotly/datasets/master/dash-sample-apps/dash-oil-and-gas/data/points.pkl",
-    DATA_PATH.joinpath("points.pkl"),
-)
-points = pickle.load(open(DATA_PATH.joinpath("points.pkl"), "rb"))
+    print(df)
+else:
+    df = pd.read_csv("./data/healthcare_data.csv", low_memory=False)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
 
+# Calculate the counts
+total_patients, total_readings, total_alerts, total_emergencies, total_warnings = util.get_total_counts(df)
+hypertension, hypothermia, hyperthermia, fever, hyperglycemia, tachycardia = util.get_alert_counts(df)
 
-# Load data
-df = pd.read_csv(
-    "https://github.com/plotly/datasets/raw/master/dash-sample-apps/dash-oil-and-gas/data/wellspublic.csv",
-    low_memory=False,
-)
-df["Date_Well_Completed"] = pd.to_datetime(df["Date_Well_Completed"])
-df = df[df["Date_Well_Completed"] > dt.datetime(1960, 1, 1)]
-
-trim = df[["API_WellNo", "Well_Type", "Well_Name"]]
-trim.index = trim["API_WellNo"]
-dataset = trim.to_dict(orient="index")
-
-
-# Create global chart template
-mapbox_access_token = "pk.eyJ1IjoicGxvdGx5bWFwYm94IiwiYSI6ImNrOWJqb2F4djBnMjEzbG50amg0dnJieG4ifQ.Zme1-Uzoi75IaFbieBDl3A"
-
-# LAYOUT
+# --------- DASH LAYOUT --------- #
 layout = dict(autosize=True, automargin=True, margin=dict(l=30, r=30, b=20, t=40), hovermode="closest",
-              plot_bgcolor="#F9F9F9", paper_bgcolor="#F9F9F9", title="Satellite Overview",
-              legend=dict(font=dict(size=10), orientation="h"),
-              mapbox=dict(accesstoken=mapbox_access_token, style="light", center=dict(lon=-78.05, lat=42.54), zoom=7,),
+              plot_bgcolor="#F9F9F9", paper_bgcolor="#F9F9F9", title="Location of Sensor Readings",
+              legend=dict(font=dict(size=10), orientation="h"),marker = {'size': 12},
+              mapbox=dict(accesstoken=config.mapbox_access_token, style="streets", center=dict(lon=-6.317, lat=53.335), zoom=11),
               )
 
 # Create app layout
-"""Function to run dash inside Flask Application"""
-def create_dash_application(flask_app):
-    dash_app = dash.Dash(server=flask_app, name="Dashboard", url_base_pathname="/dash/")
-    dash_app.layout = html.Div(
+app.layout = html.Div(
     [
         dcc.Store(id="aggregate_data"),
         # empty Div to trigger javascript file for graph resizing
@@ -88,12 +63,13 @@ def create_dash_application(flask_app):
                 html.Div(
                     [
                         html.Img(
-                            src=app.get_asset_url("dash_logo.jng"),
+                            src=app.get_asset_url("dash_logo.jpeg"),
                             id="plotly-image",
                             style={
-                                "height": "100px",
+                                "height": "auto",
                                 "width": "auto",
-                                "margin-bottom": "25px",
+                                "margin-top": "5px",
+                                "margin-bottom": "5px",
                             },
                         )
                     ],
@@ -103,12 +79,13 @@ def create_dash_application(flask_app):
                     [
                         html.Div(
                             [
-                                html.H3(
-                                    "Realtime IOT Dashboard Analytics",
-                                    style={"margin-bottom": "0px"},
+                                html.H1(
+                                    "Realtime HealthCare Analytics",
+                                    style={"margin-bottom": "0px"}
+,
                                 ),
                                 html.H5(
-                                    "Production Overview", style={"margin-top": "0px"}
+                                    "Automated Dashboard for Patient Health Monitoring", style={"margin-top": "0px"}
                                 ),
                             ]
                         )
@@ -129,29 +106,18 @@ def create_dash_application(flask_app):
             ],
             id="header",
             className="row flex-display",
-            style={"margin-bottom": "25px"},
+            style={"margin-bottom": "0px",'backgroundColor': '#FFFFFF'},
         ),
         html.Div(
             [
                 html.Div(
-                    [
-                        html.P(
-                            "Select range (Last 24hrs) of sensor readings:",
-                            className="control_label",
-                        ),
-                        dcc.RangeSlider(
-                            id="year_slider",
-                            min=1960,
-                            max=2017,
-                            value=[1990, 2010],
-                            className="dcc_control",
-                        ),
+                    [   html.Strong("Patient Filters"),
                         html.P("Filter by Diseases:", className="control_label"),
                         dcc.RadioItems(
-                            id="well_status_selector",
+                            id="disease_selector",
                             options=[
                                 {"label": "All ", "value": "all"},
-                                {"label": "None", "value": "None"},
+                                {"label": "None", "value": "none"},
                                 {"label": "Custom ", "value": "custom"},
                             ],
                             value="none",
@@ -159,10 +125,10 @@ def create_dash_application(flask_app):
                             className="dcc_control",
                         ),
                         dcc.Dropdown(
-                            id="well_statuses",
-                            options=well_status_options,
+                            id="diseases",
+                            options=config.disease_options,
                             multi=True,
-                            value=list(WELL_STATUSES.keys()),
+                            value=config.diseases,
                             className="dcc_control",
                         ),
                         dcc.Checklist(
@@ -173,21 +139,173 @@ def create_dash_application(flask_app):
                         ),
                         html.P("Filter by Health Statuses:", className="control_label"),
                         dcc.RadioItems(
-                            id="well_type_selector",
+                            id="health_status_selector",
                             options=[
                                 {"label": "All ", "value": "all"},
-                                {"label": "Healthy Only ", "value": "stable-healthy"},
+                                {"label": "Stable", "value": "stable"},
                                 {"label": "Customize ", "value": "custom"},
                             ],
-                            value="stable-healthy",
+                            value="stable",
                             labelStyle={"display": "inline-block"},
                             className="dcc_control",
                         ),
                         dcc.Dropdown(
-                            id="well_types",
-                            options=well_type_options,
+                            id="health_statuses",
+                            options=config.health_options,
                             multi=True,
-                            value=list(WELL_TYPES.keys()),
+                            value=config.statuses,
+                            className="dcc_control",
+                        ),
+                        html.P("Filter by Gender:", className="control_label"),
+                        dcc.RadioItems(
+                            id="gender_selector",
+                            options=[
+                                {"label": "Both ", "value": "Both"},
+                                {"label": "Male", "value": "Male"},
+                                {"label": "Female ", "value": "Female"},
+                            ],
+                            value="Both",
+                            labelStyle={"display": "inline-block"},
+                            className="dcc_control",
+                        ),
+                        dcc.Dropdown(
+                            id="genders",
+                            options=config.gender_options,
+                            multi=True,
+                            value=config.genders,
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select Age Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="age_slider",
+                            min=18,
+                            max=95,
+                            value=[18, 95],
+                            marks={18: "18",
+                                   30: "30",
+                                   40: "40",
+                                   50: "50",
+                                   60: "60",
+                                   70: "70",
+                                   80: "80",
+                                   90: "90",
+                                   100: "100"},
+
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select BMI Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="bmi_slider",
+                            min=18,
+                            max=45,
+                            value=[25, 30],
+                            marks={18: "18",
+                                   25: "25",
+                                   30: "30",
+                                   35: "35",
+                                   40: "40"
+                                   },
+
+                            className="dcc_control",
+                        ),
+                        html.Br(),
+                        html.Strong("Sensor Reading Filters"),
+                        html.P(
+                            "Select Heart Rate Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="heart_rate_slider",
+                            min=40,
+                            max=300,
+                            value=[60, 120],
+                            marks={40: "40",
+                                   60: "60",
+                                   80: "80",
+                                   120: "120",
+                                   160: "160",
+                                   200: "200"
+                                   },
+
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select Body Temperature Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="body_temperature_slider",
+                            min=33,
+                            max=42,
+                            value=[35, 38],
+                            marks={33: "33.0",
+                                   35: "35.0",
+                                   37: "37.0",
+                                   39: "39.0",
+                                   41: "41.0",
+                                   },
+
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select Blood Sugar Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="blood_sugar_slider",
+                            min=35,
+                            max=500,
+                            value=[50, 250],
+                            marks={35: "35",
+                                   150: "150",
+                                   250: "250",
+                                   350: "350",
+                                   500: "500",
+                                   },
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select Systolic BP Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="systolic_slider",
+                            min=100,
+                            max=220,
+                            value=[100, 160],
+                            marks={100: "100",
+                                   120: "120",
+                                   140: "140",
+                                   160: "160",
+                                   180: "180",
+                                   200: "200",
+                                   220: "220"
+                                   },
+
+                            className="dcc_control",
+                        ),
+                        html.P(
+                            "Select Diastolic BP Range:",
+                            className="control_label",
+                        ),
+                        dcc.RangeSlider(
+                            id="diastolic_slider",
+                            min=50,
+                            max=150,
+                            value = [80,120],
+                            marks={50: "50",
+                                   75: "75",
+                                   100: "100",
+                                   125: "125",
+                                   150: "150"
+                                   },
+
                             className="dcc_control",
                         ),
                     ],
@@ -199,30 +317,98 @@ def create_dash_application(flask_app):
                         html.Div(
                             [
                                 html.Div(
-                                    [html.H6(id="well_text"), html.P("Number of Patients")],
-                                    id="wells",
+                                    [html.H6(id="numberPatients"), html.P("Number of Patients"),
+                                     html.Strong(str(total_patients), style={'font-size': '20px'})],
+                                    id="patients",
+                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="gasText"), html.P("Total Sensor Readings")],
-                                    id="gas",
+                                    [html.H6(id="numberReadings"),
+                                     html.P("Number of Sensor Readings"),
+                                     html.Strong(str(total_readings), style={'font-size': '20px'})],
+                                    id="readings",
+                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="oilText"), html.P("Emergency Alerts")],
-                                    id="oil",
+                                    [html.H6(id="numberAlerts"),html.P("Total Alerts Detected"),
+                                     html.Strong(str(total_alerts),style={'font-size': '20px'})],
+                                    id="alerts",style={'backgroundColor': '#1289c9', 'opacity': 0.9},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numberEmergencies"), html.P("Total Emergencies Reported"),
+                                     html.Strong(str(total_emergencies),style={'font-size': '20px'})],
+                                    id="emergencies",
+                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numberWarnings"), html.P("Total Warnings Reported"),
+                                     html.Strong(str(total_warnings),style={'font-size': '20px'})],
+                                    id="warnings",
+                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
                                 ),
 
                             ],
                             id="info-container",
+                            style={'color': '#FFFFFF', 'opacity': 0.9},
                             className="row container-display",
                         ),
-                        html.Div(
-                            [dcc.Graph(id="count_graph")],
-                            id="countGraphContainer",
-                            className="pretty_container",
+                        html.P("Detected Patient Alerts", className="control_label"),
+                        html.Div(util.create_alert_graph(df),
                         ),
+                        html.Div(
+                            [
+                                html.Div(
+                                    [html.H6(id="numHypertension"), html.P("Hypertension Alerts"),
+                                     html.Strong(str(hypertension), style={'font-size': '20px'})],
+                                    id="hypertension",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numHypothermia"), html.P("Hypothermia Alerts"),
+                                     html.Strong(str(hypothermia), style={'font-size': '20px'})],
+                                    id="hypothermia",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numHyperthermia"), html.P("Hyperthermia Alerts"),
+                                     html.Strong(str(hyperthermia), style={'font-size': '20px'})],
+                                    id="hyperthermia",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numFever"), html.P("Fever Alerts"),
+                                     html.Strong(str(fever), style={'font-size': '20px'})],
+                                    id="fever",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numHyperglycemia"), html.P("Hyperglycemia Alerts"),
+                                     html.Strong(str(hyperglycemia), style={'font-size': '20px'})],
+                                    id="hyperglycemia",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [html.H6(id="numTachycardia"), html.P("Tachycardia Alerts"),
+                                     html.Strong(str(tachycardia), style={'font-size': '20px'})],
+                                    id="tachycardia",
+                                    style={'backgroundColor': '#bae5ff'},
+                                    className="mini_container",
+                                ),
+                            ],
+                            id="info-container2",
+                            className="row container-display",
+                        ),
+
                     ],
                     id="right-column",
                     className="eight columns",
@@ -233,11 +419,13 @@ def create_dash_application(flask_app):
         html.Div(
             [
                 html.Div(
-                    [dcc.Graph(id="main_graph")],
+                    [ html.P("Patient Sensor Readings"),
+                        dcc.Graph(id="main_graph")],
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="individual_graph")],
+                    [ html.P("Patient's Main Health Stats"),
+                        dcc.Graph(id="health_graph")],
                     className="pretty_container five columns",
                 ),
             ],
@@ -246,11 +434,22 @@ def create_dash_application(flask_app):
         html.Div(
             [
                 html.Div(
-                    [dcc.Graph(id="pie_graph")],
+                    [html.P("All Patient Statistics:"),
+                     dcc.Dropdown(
+                         id='names',
+                         value='Patients by BMI',
+                         options=[{'value': x, 'label': x}
+                                  for x in ['Patients by BMI', 'Patients by Health Status', 'Patients by Age',
+                                            'Patients by Condition', 'Patients by Gender', 'Patients by Postcode']],
+                         clearable=False,
+                     ),
+                     dcc.Graph(id="pie-chart"),
+                     ],
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [dcc.Graph(id="aggregate_graph")],
+                    [ html.P("Patient's Blood Pressure Stats"),
+                      dcc.Graph(id="blood_pressure_graph")],
                     className="pretty_container five columns",
                 ),
             ],
@@ -260,204 +459,78 @@ def create_dash_application(flask_app):
     id="mainContainer",
     style={"display": "flex", "flex-direction": "column"},
 )
-    """Function to make dashboards private """
-    for view_function in dash_app.server.view_functions:
-        if view_function.startswith(dash_app.config.url_base_pathname):
-            dash_app.server.view_functions[view_function] = login_required(
-                dash_app.server.view_functions[view_function]
-            )
-    return dash_app
 
 
-# Helper functions
-def human_format(num):
-    if num == 0:
-        return "0"
-
-    magnitude = int(math.log(num, 1000))
-    mantissa = str(int(num / (1000 ** magnitude)))
-    return mantissa + ["", "K", "M", "G", "T", "P"][magnitude]
-
-
-def filter_dataframe(df, well_statuses, well_types, year_slider):
-    dff = df[
-        df["Well_Status"].isin(well_statuses)
-        & df["Well_Type"].isin(well_types)
-        & (df["Date_Well_Completed"] > dt.datetime(year_slider[0], 1, 1))
-        & (df["Date_Well_Completed"] < dt.datetime(year_slider[1], 1, 1))
-    ]
-    return dff
-
-
-def produce_individual(api_well_num):
-    try:
-        points[api_well_num]
-    except:
-        return None, None, None, None
-
-    index = list(
-        range(min(points[api_well_num].keys()), max(points[api_well_num].keys()) + 1)
-    )
-    gas = []
-    oil = []
-    water = []
-
-    for year in index:
-        try:
-            gas.append(points[api_well_num][year]["Gas Produced, MCF"])
-        except:
-            gas.append(0)
-        try:
-            oil.append(points[api_well_num][year]["Oil Produced, bbl"])
-        except:
-            oil.append(0)
-        try:
-            water.append(points[api_well_num][year]["Water Produced, bbl"])
-        except:
-            water.append(0)
-
-    return index, gas, oil, water
-
-
-def produce_aggregate(selected, year_slider):
-
-    index = list(range(max(year_slider[0], 1985), 2016))
-    gas = []
-    oil = []
-    water = []
-
-    for year in index:
-        count_gas = 0
-        count_oil = 0
-        count_water = 0
-        for api_well_num in selected:
-            try:
-                count_gas += points[api_well_num][year]["Gas Produced, MCF"]
-            except:
-                pass
-            try:
-                count_oil += points[api_well_num][year]["Oil Produced, bbl"]
-            except:
-                pass
-            try:
-                count_water += points[api_well_num][year]["Water Produced, bbl"]
-            except:
-                pass
-        gas.append(count_gas)
-        oil.append(count_oil)
-        water.append(count_water)
-
-    return index, gas, oil, water
-
-
-# Create callbacks
-app.clientside_callback(
-    ClientsideFunction(namespace="clientside", function_name="resize"),
-    Output("output-clientside", "children"),
-    [Input("count_graph", "figure")],
-)
-
-
-@app.callback(
-    Output("aggregate_data", "data"),
-    [
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
-    ],
-)
-def update_production_text(well_statuses, well_types, year_slider):
-
-    dff = filter_dataframe(df, well_statuses, well_types, year_slider)
-    selected = dff["API_WellNo"].values
-    index, gas, oil, water = produce_aggregate(selected, year_slider)
-    return [human_format(sum(gas)), human_format(sum(oil)), human_format(sum(water))]
-
+# ---- Display the filters on left menu ---- #
 
 # Radio -> multi
 @app.callback(
-    Output("well_statuses", "value"), [Input("well_status_selector", "value")]
+    Output("diseases", "value"), [Input("disease_selector", "value")]
 )
-def display_status(selector):
+def display_condition(selector):
     if selector == "all":
-        return list(WELL_STATUSES.keys())
-    elif selector == "active":
-        return ["AC"]
+        return config.diseases
+    elif selector == "none":
+        return ["none"]
     return []
 
 
 # Radio -> multi
-@app.callback(Output("well_types", "value"), [Input("well_type_selector", "value")])
-def display_type(selector):
+@app.callback(Output("health_statuses", "value"), [Input("health_status_selector", "value")])
+def display_health(selector):
     if selector == "all":
-        return list(WELL_TYPES.keys())
-    elif selector == "productive":
-        return ["GD", "GE", "GW", "IG", "IW", "OD", "OE", "OW"]
+        return config.statuses
+    elif selector == "stable":
+        return ["stable unhealthy", "stable healthy"]
+    return []
+
+# Radio -> multi
+@app.callback(
+    Output("genders", "value"), [Input("gender_selector", "value")]
+)
+def display_gender(selector):
+    if selector == "Both":
+        return config.genders
+    elif selector == "Male":
+        return ["Male"]
+    elif selector == "Female":
+        return ["Female"]
     return []
 
 
-# Slider -> count graph
-@app.callback(Output("year_slider", "value"), [Input("count_graph", "selectedData")])
-def update_year_slider(count_graph_selected):
-
-    if count_graph_selected is None:
-        return [1990, 2010]
-
-    nums = [int(point["pointNumber"]) for point in count_graph_selected["points"]]
-    return [min(nums) + 1960, max(nums) + 1961]
-
-
-# Selectors -> well text
-@app.callback(
-    Output("well_text", "children"),[
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
-    ],
-)
-def update_well_text(well_statuses, well_types, year_slider):
-
-    dff = filter_dataframe(df, well_statuses, well_types, year_slider)
-    return dff.shape[0]
-
-
-@app.callback(
-    [
-        Output("gasText", "children"),
-        Output("oilText", "children"),
-    ],
-    [Input("aggregate_data", "data")],
-)
-
-def update_text(data):
-    return data[0] + " mcf", data[1] + " bbl"
-
-
-# Selectors -> main graph
 @app.callback(
     Output("main_graph", "figure"),
     [
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
+        Input("diseases", "value"), Input("health_statuses", "value"), Input("age_slider", "value"),
+        Input("genders", "value"), Input("bmi_slider", "value"), Input("body_temperature_slider", "value"),
+        Input("heart_rate_slider", "value"), Input("blood_sugar_slider", "value"),
+        Input("systolic_slider", "value"), Input("diastolic_slider", "value"),
     ],
     [State("lock_selector", "value"), State("main_graph", "relayoutData")],
 )
-def make_main_figure(well_statuses, well_types, year_slider, selector, main_graph_layout):
+def make_main_figure(disease, statuses, age_slider, gender,bmi_slider, temperature_slider,
+                     heartrate_slider, bloodsugar_slider, systolic_slider, diastolic_slider,
+                     selector, main_graph_layout):
 
-    dff = filter_dataframe(df, well_statuses, well_types, year_slider)
-
+    #Filter the dataframe by passing in dataframe and the variables from the filters
+    filtered_data = util.filter_dataframe(df, disease, statuses, age_slider, gender,
+                                           bmi_slider, temperature_slider, heartrate_slider,
+                                           bloodsugar_slider, systolic_slider, diastolic_slider)
+    names = filtered_data['name'].unique()
+    #filtered_data = filtered_data.to_dict("records")
     traces = []
-    for well_type, dfff in dff.groupby("Well_Type"):
-        trace = dict(
-            type="scattermapbox",
-            lon=dfff["Surface_Longitude"],
-            lat=dfff["Surface_latitude"],
-            text=dfff["Well_Name"],
-            customdata=dfff["API_WellNo"],
-            name=WELL_TYPES[well_type],
-            marker=dict(size=4, opacity=0.6),
-        )
+    for name in names:
+        new_df = filtered_data[filtered_data["name"]==name]
+        trace = dict( type="scattermapbox",
+                      hover_name=new_df["name"],
+                      lon=new_df["longitude"],
+                      lat=new_df["latitude"],
+                      text=new_df["timestamp"],
+                      customdata=new_df["name"],
+                      legend=new_df["name"],
+                      name = name,
+                      marker=dict(size=4, opacity=0.6),
+            )
         traces.append(trace)
 
     # relayoutData is None by default, and {'autosize': True} without relayout action
@@ -474,26 +547,36 @@ def make_main_figure(well_statuses, well_types, year_slider, selector, main_grap
     return figure
 
 
+
+
 # Main graph -> individual graph
-@app.callback(Output("individual_graph", "figure"), [Input("main_graph", "hoverData")])
-def make_individual_figure(main_graph_hover):
+@app.callback(Output("health_graph", "figure"),
+              [Input("main_graph", "hoverData")])
+def make_person_health_figure(main_graph_hover):
 
     layout_individual = copy.deepcopy(layout)
 
+
+    # Every time we mouse over the map it creates a list called points. We select the person's name
+    name = [person["customdata"] for person in main_graph_hover["points"]]
+
     if main_graph_hover is None:
         main_graph_hover = {
-            "points": [
-                {"curveNumber": 4, "pointNumber": 569, "customdata": 31101173130000}
+            'points': [
+                {'curveNumber': 0, 'pointNumber': 0, 'customdata': 'Non-Selected'}
             ]
         }
 
-    chosen = [point["customdata"] for point in main_graph_hover["points"]]
-    index, gas, oil, water = produce_individual(chosen[0])
+    print(main_graph_hover)
+
+    # Every time we mouse over the map it creates a list called points. We select the person's name
+    name = [person["customdata"] for person in main_graph_hover["points"]]
+    index, timestamp, heart_rate, body_temperature, blood_sugar = util.produce_health_stats(df,name[0])
 
     if index is None:
         annotation = dict(
             text="No data available",
-            x=0.5,
+            x=timestamp,
             y=0.5,
             align="center",
             showarrow=False,
@@ -507,208 +590,142 @@ def make_individual_figure(main_graph_hover):
             dict(
                 type="scatter",
                 mode="lines+markers",
-                name="Heart Rate",
-                x=index,
-                y=gas,
+                name="Heart Rate (bpm)",
+                x=timestamp,
+                y=heart_rate,
                 line=dict(shape="spline", smoothing=2, width=1, color="#fac1b7"),
                 marker=dict(symbol="diamond-open"),
             ),
             dict(
                 type="scatter",
                 mode="lines+markers",
-                name="Body Temperature ",
-                x=index,
-                y=oil,
-                line=dict(shape="spline", smoothing=2, width=1, color="#a9bb95"),
+                name="Body Temperature (Celsius)",
+                x=timestamp,
+                y=body_temperature,
+                line=dict(shape="spline", smoothing=2, width=1, color="#f799a2"),
                 marker=dict(symbol="diamond-open"),
             ),
             dict(
                 type="scatter",
                 mode="lines+markers",
-                name="Blood Sugar Level",
-                x=index,
-                y=water,
+                name="Blood Sugar mg/Dl",
+                x=timestamp,
+                y=blood_sugar,
                 line=dict(shape="spline", smoothing=2, width=1, color="#92d8d8"),
                 marker=dict(symbol="diamond-open"),
             ),
         ]
-        layout_individual["title"] = dataset[chosen[0]]["Well_Name"]
+        layout_individual["title"] = name[0]
 
     figure = dict(data=data, layout=layout_individual)
     return figure
 
 
-# Selectors, main graph -> aggregate graph
-@app.callback(
-    Output("aggregate_graph", "figure"),
-    [
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
-        Input("main_graph", "hoverData"),
-    ],
-)
+# Main graph -> individual graph
+@app.callback(Output("blood_pressure_graph", "figure"),
+              [Input("main_graph", "hoverData")])
+def make_blood_pressure_figure(main_graph_hover):
 
-#THIS IS THE BLOOD PRESSURE CHART
-def make_aggregate_figure(well_statuses, well_types, year_slider, main_graph_hover):
-
-    layout_aggregate = copy.deepcopy(layout)
+    layout_individual = copy.deepcopy(layout)
 
     if main_graph_hover is None:
         main_graph_hover = {
-            "points": [
-                {"curveNumber": 4, "pointNumber": 569, "customdata": 31101173130000}
+            'points': [
+                {'curveNumber': 0, 'pointNumber': 0, 'customdata': 'Non-Selected'}
             ]
         }
 
-    chosen = [point["customdata"] for point in main_graph_hover["points"]]
-    well_type = dataset[chosen[0]]["Well_Type"]
-    dff = filter_dataframe(df, well_statuses, well_types, year_slider)
+    # Every time we mouse over the map it creates a list called points. We select the person's name
+    name = [person["customdata"] for person in main_graph_hover["points"]]
+    index, timestamp,blood_pressure_top, blood_pressure_bottom = util.produce_blood_pressure(df,name[0])
 
-    selected = dff[dff["Well_Type"] == well_type]["API_WellNo"].values
-    index, gas, oil, water = produce_aggregate(selected, year_slider)
+    if index is None:
+        annotation = dict(
+            text="No data available",
+            x=timestamp,
+            y=0.5,
+            align="center",
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+        )
+        layout_individual["annotations"] = [annotation]
+        data = []
+    else:
+        data = [
+            dict(
+                type="scatter",
+                mode="lines+markers",
+                name="Systolic Blood Pressure",
+                x=timestamp,
+                y=blood_pressure_top,
+                line=dict(shape="spline", smoothing=2, width=1, color="#F9ADA0"),
+                marker=dict(symbol="diamond-open"),
+            ),
 
-    data = [
-        dict(
-            type="scatter",
-            mode="lines",
-            name="Blood Pressure Systolic",
-            x=index,
-            y=gas,
-            line=dict(shape="spline", smoothing="2", color="#F9ADA0"),
-        ),
-        dict(
-            type="scatter",
-            mode="lines",
-            name="Blood Pressure Diastolic",
-            x=index,
-            y=oil,
-            line=dict(shape="spline", smoothing="2", color="#849E68"),
-        ),
-    ]
-    layout_aggregate["title"] = "Blood Pressure: " + WELL_TYPES[well_type]
+            dict(
+                type="lines+markers",
+                mode="lines",
+                name="Diastolic Blood Pressure",
+                x=timestamp,
+                y=blood_pressure_bottom,
+                line=dict(shape="spline", smoothing=2, width=1, color="#849E68"),
+                #marker=dict(symbol="diamond-open"),
+            ),
+        ]
 
-    figure = dict(data=data, layout=layout_aggregate)
+        layout_individual["title"] = name[0]
+
+    figure = dict(data=data, layout=layout_individual)
     return figure
 
 
-# Selectors, main graph -> pie graph
 @app.callback(
-    Output("pie_graph", "figure"),
-    [
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
-    ],
-)
+    Output("pie-chart", "figure"),
+    [Input("names", "value")])
+def generate_segment_charts(names):
 
-#THIS IS THE PIE CHARTS - Add Two more for BIM, Gender, Age, Health Statuses FOR ALL PATIENTS
-def make_pie_figure(well_statuses, well_types, year_slider):
+    if names == 'Patients by BMI':
+        segment = util.get_bmi_segment(df)
+        fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="BMI",
+                                     hole=.4, hoverinfo="label+percent+name+value",
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
 
-    layout_pie = copy.deepcopy(layout)
+    if names == 'Patients by Health Status':
+        segment = util.get_existing_segments(df, 'status')
+        fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Health",
+                                     hole=.6, hoverinfo="label+percent+name+value",
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
 
-    dff = filter_dataframe(df, well_statuses, well_types, year_slider)
+    if names == 'Patients by Age':
+        segment = util.get_age_segment(df)
+        fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Age",
+                                     hoverinfo="label+percent+name+value",
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
 
-    selected = dff["API_WellNo"].values
-    index, gas, oil, water = produce_aggregate(selected, year_slider)
+    if names == 'Patients by Condition':
+        segment = util.get_existing_segments(df, 'condition')
+        fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Condition",
+                                     hoverinfo="label+percent+name+value", pull =[0.05, 0.05, 0.05, 0.05],
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
 
-    aggregate = dff.groupby(["Well_Type"]).count()
+    if names == 'Patients by Gender':
+        segment = util.get_existing_segments(df,'gender')
+        fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Gender",
+                                     hole=.25, hoverinfo="label+percent+name+value",
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
 
-    data = [
-        dict(
-            type="pie",
-            labels=["Gas", "Oil", "Water"],
-            values=[sum(gas), sum(oil), sum(water)],
-            name="Production Breakdown",
-            text=[
-                "Total Gas Produced (mcf)",
-                "Total Oil Produced (bbl)",
-                "Total Water Produced (bbl)",
-            ],
-            hoverinfo="text+value+percent",
-            textinfo="label+percent+name",
-            hole=0.5,
-            marker=dict(colors=["#fac1b7", "#a9bb95", "#92d8d8"]),
-            domain={"x": [0, 0.45], "y": [0.2, 0.8]},
-        ),
-        dict(
-            type="pie",
-            labels=[WELL_TYPES[i] for i in aggregate.index],
-            values=aggregate["API_WellNo"],
-            name="Well Type Breakdown",
-            hoverinfo="label+text+value+percent",
-            textinfo="label+percent+name",
-            hole=0.5,
-            marker=dict(colors=[WELL_COLORS[i] for i in aggregate.index]),
-            domain={"x": [0.55, 1], "y": [0.2, 0.8]},
-        ),
-    ]
-    layout_pie["title"] = "All Patient Statistics: {} to {}".format(
-        year_slider[0], year_slider[1]
-    )
-    layout_pie["font"] = dict(color="#777777")
-    layout_pie["legend"] = dict(
-        font=dict(color="#CCCCCC", size="10"), orientation="h", bgcolor="rgba(0,0,0,0)"
-    )
+    if names == 'Patients by Postcode':
+        segment = util.get_postcode_segment(df)
+        fig = go.Figure(data=[go.Bar(x=segment.index.values, y=segment.values, name="Postcode",
+                                     marker_color=config.color_map_full)])
 
-    figure = dict(data=data, layout=layout_pie)
-    return figure
-
-
-# Selectors -> count graph
-@app.callback(
-    Output("count_graph", "figure"),
-    [
-        Input("well_statuses", "value"),
-        Input("well_types", "value"),
-        Input("year_slider", "value"),
-    ],
-)
-# THIS IS THE BAR CHART - CHANGE THIS TO THE ALERTS TABLE
-def make_count_figure(well_statuses, well_types, year_slider):
-
-    layout_count = copy.deepcopy(layout)
-
-    dff = filter_dataframe(df, well_statuses, well_types, [1960, 2017])
-    g = dff[["API_WellNo", "Date_Well_Completed"]]
-    g.index = g["Date_Well_Completed"]
-    g = g.resample("A").count()
-
-    colors = []
-    for i in range(1960, 2018):
-        if i >= int(year_slider[0]) and i < int(year_slider[1]):
-            colors.append("rgb(123, 199, 255)")
-        else:
-            colors.append("rgba(123, 199, 255, 0.2)")
-
-    data = [
-        dict(
-            type="scatter",
-            mode="markers",
-            x=g.index,
-            y=g["API_WellNo"] / 2,
-            name="All Wells",
-            opacity=0,
-            hoverinfo="skip",
-        ),
-        dict(
-            type="bar",
-            x=g.index,
-            y=g["API_WellNo"],
-            name="All Wells",
-            marker=dict(color=colors),
-        ),
-    ]
-
-    layout_count["title"] = "Completed Wells/Year"
-    layout_count["dragmode"] = "select"
-    layout_count["showlegend"] = False
-    layout_count["autosize"] = True
-
-    figure = dict(data=data, layout=layout_count)
-    return figure
+    fig.update_layout(plot_bgcolor='rgb(255,255,255)')
+    return fig
 
 
 # Main
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
+    #app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+

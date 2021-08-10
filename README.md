@@ -40,14 +40,14 @@ $ docker-compose -f docker-compose-kafka.yaml up -d
 
 $ docker-compose -f docker-compose-kafka.yaml logs -f broker | grep "started"
 
-$ docker-compose -f docker-compose-mysql.yaml up -d
+$ docker-compose -f docker-compose-cassandra.yaml up -d
 
 $ docker-compose up --build
 
 
 ## INTERFACING WITH APP
 ### View Stream in Topic
-$ docker-compose -f docker-compose-kafka.yaml exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic queueing.healthcaredata --from-beginning
+$ docker-compose -f docker-compose-kafka.yaml exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic queueing.healthcare --from-beginning
 
 ### View Data via Cassandra Shell
 
@@ -56,16 +56,16 @@ $ docker exec -it cassandra cqlsh localhost 9042
 
 
 ##### Cassandra shell commands
-cqlsh> use sensorpipeline;
+cqlsh> use healthcare_db;
 
-cqlsh:sensorpipeline> select * from sensorpipeline.sensordata;
+cqlsh:healthcare_db> select * from healthcare_db.device_patient;
 
  id | content | type
 ----+---------+------
 
 (0 rows)
 
-cqlsh:sensorpipeline> exit
+cqlsh:healthcare_db> exit
 
 
 ## MANUAL TEAR DOWN STEPS

@@ -5,12 +5,8 @@ cd ./docker
 echo "--- Start Healthcare Data Pipline Deployment --- "
 
 # Create network
-echo -n " Create Kafka Pipeline Network"
-sudo docker network create healthcare_data_pipeline
-
-# Create kafka cluster
-echo -n " Create Kafka Cluster with Zookeeper & Broker "
-sudo docker-compose -f docker-compose-kafka.yaml up -d
+echo -n " Create the Docker Network"
+sudo docker network create realtime_healthcare
 
 
 # Create Database
@@ -18,6 +14,10 @@ sudo docker-compose -f docker-compose-kafka.yaml up -d
 #Cassandra
 echo -n " Create Cassandra Database from Bootstrap file "
 sudo docker-compose -f docker-compose-cassandra.yaml up -d
+
+# Create kafka cluster
+echo -n " Create Kafka Cluster with Zookeeper & Broker "
+sudo docker-compose -f docker-compose-kafka.yaml up -d
 
 
 # Build all

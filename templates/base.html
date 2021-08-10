@@ -5,12 +5,12 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Real Time Healthcare Analytics</title>
+    <title>Flask Auth Example</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" />
 </head>
 
 <body>
-<section class="hero is-fullheight" style="background:#C4FCEF;">
+<section class="hero is-fullheight" style="background-color:#C4FCEF;">
 
     <div class="hero-head">
         <nav class="navbar">
@@ -20,14 +20,13 @@
                     <div class="navbar-end">
                         {% if current_user.is_authenticated %}
                         <a href="{{ url_for('main.index') }}" class="navbar-item">
-                            Home
+                            Dashboards
                         </a>
                         {% endif %}
                         {% if current_user.is_authenticated %}
-                        <a href= "/dash" class="navbar-item">
-                            Dashboards
+                        <a href="{{ url_for('main.profile') }}" class="navbar-item">
+                            Profile
                         </a>
-
                         {% endif %}
                         {% if not current_user.is_authenticated %}
                         <a href="{{ url_for('auth.login') }}" class="navbar-item">

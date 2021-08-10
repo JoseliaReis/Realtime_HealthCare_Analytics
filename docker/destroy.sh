@@ -23,12 +23,12 @@ sudo docker rm cassandra
 sudo docker rm /cassandra-keyspace
 
 echo "Removing Cached Data on Cassandra Volume"
-sudo rm -rf ./out/
+sudo rm -rf ../cassandra/db/
 
 
 # Remove Docker network
 echo "Remove Docker network"
-sudo docker network rm healthcare_data_pipeline
+sudo docker network rm realtime_healthcare
 
 echo "Remove any orphan containers"
 sudo docker-compose down --remove-orphans
