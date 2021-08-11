@@ -11,7 +11,7 @@ from random import randint, uniform, choice
 
 
 #Configuration
-
+# fieldnames are a sequence of keys that will identify the order of the values in the dictionary
 fieldnames = ['id',
               'name',
               'age',
@@ -33,14 +33,18 @@ fieldnames = ['id',
               'latitude',
               'alert']
 
+# The number of patient will be 100
 patient_count = 100
-fake = Faker() #
+# Faker it is a Python packege that will generate fake data
+fake = Faker()
 
 
 def generate_seed():
-    # Generate a random number between 0 and 100.
-
-    # This is used to weight the emergency readings to a maximum of 1/10th
+    """
+    This function will generate a random number between 0 and 100
+    and it will be used to generate more precise emergency alerts
+     :return: seed
+    """
     seed = randint(0, 100)
 
     return seed
@@ -52,16 +56,22 @@ def create_unique_id():
     that can be used as primary key for database
     :return: reading_id
     """
+
     reading_id = ''.join(uuid.uuid4().hex)
     return reading_id
 
 
 def create_device_id():
-
+    """
+    This function will create three different device ID  for each smartwaches
+    :return: device id
+    """
     devices = ["SMARTWATCH1-", "SMARTWATCH2-", "SMARTWATCH3-"]
-
+    # choice means that the device id generate will be one of the three smartwatches in the
     device = choice(devices)
+    # invoke the function create unique id
     id = create_unique_id()
+    # the device id will the device + the id generated
     device_id = device + id
     return device_id
 
@@ -72,6 +82,8 @@ def create_heart_rate(emergency=False):
     eg. 100
     :return: heart_rate
     """
+
+    # invoke the seed funcion
     seed = generate_seed()
     if seed > 90 and emergency is True:
         heart_rate = randint(40, 300)
@@ -87,11 +99,13 @@ def create_blood_pressure_top(emergency=False):
     eg. 175
     :return: blood_pressure_top
     """
-
+    # invoke the seed function
     seed = generate_seed()
     if seed > 95 and emergency is True:
+        # if both conditions were generated, then it is an alert
         blood_pressure_top = randint(100, 220)
     else:
+        # else body blood pressure top is normal range
         blood_pressure_top = randint(100, 179)
 
     return blood_pressure_top
@@ -103,12 +117,14 @@ def create_blood_pressure_bottom(emergency=False):
     eg. 88
     :return: blood_pressure_bottom
     """
-
+    # invoke the seed function
     seed = generate_seed()
 
     if seed > 96 and emergency is True:
+        # if both conditions were generated, then it is an alert
         blood_pressure_bottom = randint(50, 140)
     else:
+        # else body blood pressure bottom is normal range
         blood_pressure_bottom = randint(50, 119)
 
     return blood_pressure_bottom
@@ -120,12 +136,13 @@ def create_body_temperature(emergency=False):
     if emergency is True, generate above 39.4. Default value for emergency is False
     :return: blood_pressure_bottom
     """
-
+    # invoke the seed function
     seed = generate_seed()
 
     if seed >= 99 and emergency is True:
         # to generate an emergency body temperature
-        #  2 means that is just two decimal numbers
+        # 2 means that is just two decimal numbers
+        # round means that the decimal number will be precise ()ex. 33.4
         body_temperature = round(uniform(33.0, 41.9), 2)
     else:
         # else body temperature is normal range
@@ -140,7 +157,7 @@ def create_blood_sugar_level(emergency=False):
     if emergency is True, generate above 200. Default value for emergency is False
     :return: blood_sugar_level
     """
-
+    # invoke the seed function
     seed = generate_seed()
 
     if seed > 90 and emergency is True:
@@ -154,13 +171,17 @@ def create_blood_sugar_level(emergency=False):
 
 
 def create_phone_number():
+    """
+    This function will generate a phone number with Irish coutry code +353 and predefined prefixes
+     :return: phone_number
+     """
     country_code = "+353"
     prefix = ["-81", "-82", "-88", "-84"]
-    digits = ""
+    digits = "" # will be empty because will be filled each time that the four loop is executed
     for i in range(7):
         digit = randint(0, 9)
-        digits += str(digit)
-
+        digits += str(digit) # add digit to the digits string
+    # add all previus variables and generate an irish number
     phone_number = country_code + choice(prefix) + "-" + digits
 
     return phone_number
@@ -182,17 +203,18 @@ def create_geolocation(coordinate_type):
 
 def create_dublin_address():
     """
-
+    This  function will create a fake dublin address based on the postcodes that were
+    previous defined as array.
     :return:
     """
     postcodes = ['Dublin 1','Dublin 2', 'Dublin 3', 'Dublin 4', 'Dublin 5', 'Dublin 6',
                  'Dublin 7','Dublin 8', 'Dublin 9', 'Dublin 10', 'Dublin 11', 'Dublin 12',
                  'Dublin 13', 'Dublin 14', 'Dublin 15', 'Dublin 16', 'Dublin 17', 'Dublin 18',
                  'Dublin 19', 'Dublin 20', 'Dublin 21', 'Dublin 22', 'Dublin 23', 'Dublin 24']
-
+    # crete a faker address using faker
     street_address = fake.street_address()
-    postcode = choice(postcodes) # Randomly chose one post code
-
+    postcode = choice(postcodes) # Randomly chose one post code from the array list
+    # The full address will be the randomly faker street address, postcode and complement Republic Ireland
     full_address = street_address + "," + postcode + ", Dublin, Republic of Ireland"
 
     return full_address
@@ -236,13 +258,16 @@ def create_time_of_measurement():
     """
 
     list_timestamps = []
-
+    # this variable will use the python package to get the unix time(https://www.unixtimestamp.com/ )
     currentTime = int(round(time.time()))
+    # this variable will subtract from the current time the 24*60*60 to get the same time of yesterday
     yesterdayTime = currentTime - (24 * 60 * 60)
-
+    # create a for loop to loops between yesterday and today time
     for timestamp in range(yesterdayTime, currentTime):
-        if timestamp % 60 == 0:
+        if timestamp % 60 == 0: # skip every second and generate a minute instead os seconds
+            # convert the timestamp from the unix time to date and time
             converted_timestamp = datetime.datetime.utcfromtimestamp(timestamp)
+            # add the converted timestampt to a list of timestamps
             list_timestamps.append(converted_timestamp)
 
     return list_timestamps
@@ -250,8 +275,9 @@ def create_time_of_measurement():
 
 def create_patient_content():
     """
-
-    :return:
+     This function creates the patient payload content by calling all the functions to
+    generate the data
+    :return: payload (dictionary of keys: values)
     """
     health = create_health_status()
 
@@ -263,7 +289,7 @@ def create_patient_content():
         name = fake.name_female()
 
     patient_payload = {
-        fieldnames[0]: fake.unique.random_int(min=1, max=patient_count),
+        fieldnames[0]: fake.unique.random_int(min=1, max=patient_count), # maximum count is 100
         fieldnames[1]: name,
         fieldnames[2]: randint(18, 95),
         fieldnames[3]: gender,
@@ -373,6 +399,7 @@ def write_to_csv():
             print("Generating Patient Data for {0} patients".format(patient_count))
 
             # for every iteration in patient count
+            # the range of patient count is 100
             for i in range(patient_count):
                 # create the patient content payload
                 patient = create_patient_content()

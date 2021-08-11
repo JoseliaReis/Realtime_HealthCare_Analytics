@@ -96,8 +96,8 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.A(
-                            html.Button("Learn More", id="learn-more-button"),
-                            href="https://plot.ly/dash/pricing/",
+                            html.Button("Contact me", id="learn-more-button"),
+                            href="https://www.linkedin.com/in/joseliareis/",
                         )
                     ],
                     className="one-third column",
@@ -448,7 +448,7 @@ app.layout = html.Div(
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [ html.P("Patient's Blood Pressure Stats"),
+                    [ html.P("Patient's Blood Pressure Status"),
                       dcc.Graph(id="blood_pressure_graph")],
                     className="pretty_container five columns",
                 ),

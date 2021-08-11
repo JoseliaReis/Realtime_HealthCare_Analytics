@@ -31,15 +31,15 @@ async def consume_payload(loop):
     """
     function to consume from topic and persist to database
     """
-
-    aiosession(session) # create cassandra.cluster.aiosession
+    # create cassandra.cluster.aiosession
+    aiosession(session)
 
     # non-blocking prepared CQL statement
     query = await session.prepare_future('INSERT INTO healthcare_db.device_patient JSON VALUES (?);')
     select = await session.prepare_future('SELECT COUNT(*) healthcare_db.device_patient;')
 
 
-    # create consumer object
+    # To consume latest messages and auto-commit offsets
     consumer = AIOKafkaConsumer(
         topic,
         loop=loop,
@@ -53,6 +53,7 @@ async def consume_payload(loop):
     batch = []
 
     try:
+        # async assure that the message will be delivered instantly to a consumer
         async for message in consumer:
             payload = message.value
             deserialized = lambda value: json.loads(payload)
