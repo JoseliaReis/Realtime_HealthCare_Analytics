@@ -357,7 +357,7 @@ def create_emergency_alerts(patient_payload, sensor_payload):
                   "Patient has body temperature of {0} celcius".format(body_temp)
 
     # Condition 4
-    if condition != "stable healthy" and 38 < body_temp < 41.5:
+    if status != "stable healthy" and 38 < body_temp < 41.5:
         message = "WARNING! FEVER DETECTED: " + \
         "Patient aged {0} with condition {1} has body temperature of {2} celcius".format(age, condition, body_temp)
 
@@ -367,7 +367,7 @@ def create_emergency_alerts(patient_payload, sensor_payload):
                   "Patient with {0} has blood sugar level of {1} mg/dl".format(condition, blood_sugar)
 
     # Condition 6
-    if heart_rate > 180 and condition == 'heart_disease':
+    if heart_rate > 180 and condition == 'heart disease':
         message = "WARNING! TACHYCARDIA DETECTED: " + \
         "Patient with BMI {0} with condition {1} has heart rate of {2} BPM".format(bmi, condition, heart_rate)
 

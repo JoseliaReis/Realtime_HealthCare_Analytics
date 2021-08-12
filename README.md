@@ -34,13 +34,13 @@ $ ./destory.sh
 ## MANUAL TEAR DOWN STEPS
 
 ### start main docker compose
-$ docker network create healthcare_data_pipeline
+$ docker network create healthcare_pipeline
 
-$ docker-compose -f docker-compose-kafka.yaml up -d
+$ docker-compose -f docker-compose-kafka.yaml up -d --remove-orphans
 
 $ docker-compose -f docker-compose-kafka.yaml logs -f broker | grep "started"
 
-$ docker-compose -f docker-compose-cassandra.yaml up -d
+$ docker-compose -f docker-compose-cassandra.yaml up -d --remove-orphans
 
 $ docker-compose up --build
 
@@ -85,7 +85,7 @@ $ docker rm container cassandra
 
 
 ### Remove Docker network
-$ docker network rm sensor_data_pipeline
+$ docker network rm healthcare_pipeline
 
 ## Current Outstanding Bugs
 * Cassandra Hostname refused connection continues to work intermittently, could not fix without further time spent on debugging.

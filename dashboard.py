@@ -4,7 +4,6 @@ import copy
 import pathlib
 
 import dash
-import asyncio
 import pandas as pd
 from dash.dependencies import Input, Output, State, ClientsideFunction
 import dash_core_components as dcc
@@ -15,7 +14,7 @@ import plotly.graph_objects as go
 # Import Utility functions from the util directory/package
 from utils import functions as util
 from utils import config as config
-
+import pathlib
 # get relative data folder
 PATH = pathlib.Path(__file__).parent
 DATA_PATH = PATH.joinpath("data").resolve()
@@ -29,14 +28,11 @@ server = app.server
 
 # --------- LOAD DATA --------- #
 
-source = "csv"
+source = "cassandra"
 
 if source == 'cassandra':
-    loop = asyncio.get_event_loop()
-    df = loop.run_until_complete(util.read_cassandra(config.host,
-                                                     config.username, config.password, config.keyspace))
-
-    print(df)
+    df = util.read_cassandra(config.host, config.username, config.password, config.keyspace)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
 else:
     df = pd.read_csv("./data/healthcare_data.csv", low_memory=False)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -96,8 +92,8 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.A(
-                            html.Button("Contact me", id="learn-more-button"),
-                            href="https://www.linkedin.com/in/joseliareis/",
+                            html.Button("Learn More", id="learn-more-button"),
+                            href="https://plot.ly/dash/pricing/",
                         )
                     ],
                     className="one-third column",
@@ -439,8 +435,7 @@ app.layout = html.Div(
                          id='names',
                          value='Patients by BMI',
                          options=[{'value': x, 'label': x}
-                                  for x in ['Patients by BMI', 'Patients by Health Status', 'Patients by Age',
-                                            'Patients by Condition', 'Patients by Gender', 'Patients by Postcode']],
+                                  for x in config.patient_statistics],
                          clearable=False,
                      ),
                      dcc.Graph(id="pie-chart"),
@@ -448,7 +443,7 @@ app.layout = html.Div(
                     className="pretty_container seven columns",
                 ),
                 html.Div(
-                    [ html.P("Patient's Blood Pressure Status"),
+                    [ html.P("Patient's Blood Pressure Stats"),
                       dcc.Graph(id="blood_pressure_graph")],
                     className="pretty_container five columns",
                 ),
@@ -556,10 +551,6 @@ def make_person_health_figure(main_graph_hover):
 
     layout_individual = copy.deepcopy(layout)
 
-
-    # Every time we mouse over the map it creates a list called points. We select the person's name
-    name = [person["customdata"] for person in main_graph_hover["points"]]
-
     if main_graph_hover is None:
         main_graph_hover = {
             'points': [
@@ -608,7 +599,7 @@ def make_person_health_figure(main_graph_hover):
             dict(
                 type="scatter",
                 mode="lines+markers",
-                name="Blood Sugar mg/Dl",
+                name="Blood Sugar mg/DL",
                 x=timestamp,
                 y=blood_sugar,
                 line=dict(shape="spline", smoothing=2, width=1, color="#92d8d8"),
@@ -728,4 +719,5 @@ def generate_segment_charts(names):
 if __name__ == "__main__":
     app.run_server(debug=False)
     #app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
+
 

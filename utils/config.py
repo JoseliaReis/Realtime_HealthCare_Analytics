@@ -32,6 +32,9 @@ health_options = [{'label': 'stable unhealthy', 'value': 'stable unhealthy'},
                   {'label': 'critical unhealthy', 'value': 'critical unhealthy'},
                   {'label': 'emergency', 'value': 'emergency'}]
 
+patient_statistics = ['Patients by BMI', 'Patients by Health Status', 'Patients by Age',
+                      'Patients by Condition', 'Patients by Gender', 'Patients by Postcode']
+
 
 # Create global chart template
 mapbox_access_token = "pk.eyJ1IjoiYnJpYW5ob3VyaWdhbiIsImEiOiJja3JtN2VhOTUxbm5wMnBvNWVia2tncW92In0.tRvm3Wd57OOxTYGaDydSTw"
@@ -50,3 +53,24 @@ color_map_full = ['#440154', '#471164', '#482071', '#472e7c', '#443b84',
                   '#a8db34', '#c5e021', '#e2e418', '#fde725']
 
 color_map_small = ['#482071', '#2a768e', '#8bd646', '#fde725']
+
+
+# --------- PYSTEST CONFIGURATION --------- #
+
+# dictionary of keys with lists as values to use during testing
+mock_data = {
+    "ages_low": [18, 50],
+    "ages_high": [50, 90],
+    "bmi_low": [19, 30],
+    "bmi_high": [30, 40],
+    "temp_low": [34.0, 36.9],
+    "temp_high": [37.0, 41.8],
+    "heartrate_low": [40, 200],
+    "heartrate_high": [200, 300],
+    "bloodsugar_low": [35, 200],
+    "bloodsugar_high": [200, 400],
+    "systolic_low": [100, 140],
+    "systolic_high": [140, 220],
+    "diastolic_low": [40, 100],
+    "diastolic_high": [100, 150]
+}

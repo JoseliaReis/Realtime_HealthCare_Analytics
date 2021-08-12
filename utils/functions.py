@@ -5,14 +5,12 @@ import pandas as pd
 import numpy as np
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
-from aiocassandra import aiosession
 
 
 
-async def read_cassandra(host, username, password, keyspace):
+def read_cassandra(host, username, password, keyspace):
     """
     This function it is a python package that will connect to Cassandra and load the data faster
-    https://github.com/aio-libs/aiocassandra/blob/master/example.py
 
     :return: df
     """
@@ -24,15 +22,15 @@ async def read_cassandra(host, username, password, keyspace):
     # create the autentication
         auth_provider=PlainTextAuthProvider(username=username, password=password)
     )
-    #  aiocassandra uses executor_threads to talk to cassndra driver
+    #  uses executor_threads to talk to cassndra driver
     session = cluster.connect()
     session.set_keyspace(keyspace)
-    aiosession(session)
 
-    # if non-blocking prepared statements is really needed:
-    query = await session.prepare_future('SELECT * FROM healthcare_db.device_patient')
+    #prepare query for cassandra to read the data
+    query = 'SELECT * FROM healthcare_db.device_patient'
 
-    df = pd.DataFrame(await session.execute_future(query))
+    #store the data in query to dataframe
+    df = pd.DataFrame(session.execute(query))
 
     return df
 
@@ -97,11 +95,11 @@ def create_alert_table(df):
     :param df:
     :return: df
     """
-    #  notna() function will find all the non-missing value in the datafram.
-    df = df[df['alert'].notna()]
-    # keep only the columns that are necessary
-    df = df[['timestamp', 'name', 'phone', 'alert', 'latitude', 'longitude']]
-
+    # keep only the columns we need
+    df = df[['timestamp','name', 'phone', 'alert', 'latitude', 'longitude']]
+    # select/slice from the dataframe where alert does not equal '' (is not empty)
+    df = df[df['alert'] != '']
+    
     return df
 
 
@@ -122,6 +120,7 @@ def create_alert_graph(df):
         columns=[{"name": i, "id": i} for i in df.columns],
         data=df.to_dict('records'),
         sort_action="native",
+        style_table={'overflowX': 'auto'},
         sort_mode='single',
         page_size=20
     )
@@ -250,7 +249,7 @@ def filter_dataframe(df, disease, status, age, gender,
         # Filter between ages
         & (df["age"] >= age[0]) & (df["age"] <= age[1])
         # Filter by BMI
-        & (df["bmi"] >= bmi[0]) & (df["age"] <= bmi[1])
+        & (df["bmi"] >= bmi[0]) & (df["bmi"] <= bmi[1])
         # Filter between heart rate
         & (df["heart_rate"] >= heartrate[0]) & (df["heart_rate"] <= heartrate[1])
         # Filter between body temperature
