@@ -20,17 +20,16 @@ async def produce_payload(loop):
     """
     function to transform payload and batch append to kafka producer
     """
-    # Get variables patient count and timestamp and arrays(lists) from the generator
+    # Get variables and arrays(lists) from the generator
     patient_count = generator.patient_count
     timestamps = generator.create_time_of_measurement()
-    # produce
+
     producer = AIOKafkaProducer(
         bootstrap_servers=kafka_broker_url,
         loop=loop,
     )
-    # Get cluster layout and initial topic/partition leadership information
     await producer.start()
-    # crete the batch
+
     batch = producer.create_batch()
 
     # for every iteration in patient count
@@ -67,6 +66,7 @@ async def produce_payload(loop):
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     loop.run_until_complete(produce_payload(loop))
+    print("Adding Messages")
     loop.close()
 
 

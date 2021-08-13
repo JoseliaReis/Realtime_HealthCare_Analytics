@@ -34,7 +34,7 @@ if source == 'cassandra':
     df = util.read_cassandra(config.host, config.username, config.password, config.keyspace)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 else:
-    df = pd.read_csv("./data/healthcare_data.csv", low_memory=False)
+    df = pd.read_csv("test_data/full_data.csv", low_memory=False)
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
 # Calculate the counts

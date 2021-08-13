@@ -11,21 +11,6 @@ WITH REPLICATION = {
 # Use Keyspace
 use healthcare_db;
 
-# Create content immutable set
-CREATE type healthcare_db.device_readings(
-  reading_ID TEXT,
-  heart_rate INT,
-  blood_pressure_top INT,
-  blood_pressure_bottom INT,
-  body_temperature DECIMAL,
-  timestamp BIGINT ,
-  longitude TEXT,
-  latitude TEXT,
-  alert TEXT
-);
-
-
-
 
 # create table
 CREATE TABLE IF NOT EXISTS healthcare_db.device_patient(
@@ -49,5 +34,5 @@ CREATE TABLE IF NOT EXISTS healthcare_db.device_patient(
   longitude TEXT,
   latitude TEXT,
   alert TEXT,
-  PRIMARY KEY (reading_id,timestamp)
-);
+  PRIMARY KEY ((id), timestamp))
+WITH CLUSTERING ORDER BY (timestamp DESC);

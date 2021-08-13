@@ -17,34 +17,31 @@ from cassandra.auth import PlainTextAuthProvider
 #Configuration
 topic =  os.environ.get('SENSOR_TOPIC')
 kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
-
-print("Connecting to Cassandra DB")
-cluster = Cluster(
-    contact_points=['127.0.0.1'],
-    auth_provider = PlainTextAuthProvider(username='cassandra', password='cassandra')
-)
-session = cluster.connect()
-session.set_keyspace("healthcare_db")
+kafka_address = "localhost:9092"
 
 
 async def consume_payload(loop):
     """
     function to consume from topic and persist to database
     """
-    # create cassandra.cluster.aiosession
+
+    print("Connecting to Cassandra DB")
+    cluster = Cluster(
+        contact_points=['127.0.0.1'],
+        auth_provider=PlainTextAuthProvider(username='cassandra', password='cassandra')
+    )
+    session = cluster.connect()
     aiosession(session)
-
     # non-blocking prepared CQL statement
-    query = await session.prepare_future('INSERT INTO healthcare_db.device_patient JSON VALUES (?);')
-    select = await session.prepare_future('SELECT COUNT(*) healthcare_db.device_patient;')
+    query = await session.prepare_future('INSERT INTO healthcare_db.device_patient JSON VALUES (?)')
+    select = await session.prepare_future('SELECT COUNT(*) healthcare_db.device_patient')
 
-
-    # To consume latest messages and auto-commit offsets
+    # create consumer object
     consumer = AIOKafkaConsumer(
         topic,
         loop=loop,
         bootstrap_servers=kafka_broker_url,
-        group_id = "sensor_consumer_group", #Removed as issue with consumer group id
+        #group_id = "sensor_consumer_group", #Removed as issue with consumer group id
         enable_auto_commit=False,
         auto_offset_reset="earliest",
     )
@@ -53,14 +50,13 @@ async def consume_payload(loop):
     batch = []
 
     try:
-        # async assure that the message will be delivered instantly to a consumer
         async for message in consumer:
             payload = message.value
             deserialized = lambda value: json.loads(payload)
             batch.append(payload)
             statement = SimpleStatement(query, consistency_level=ConsistencyLevel.QUORUM)
-            if len(batch) == 100:
-                await consumer.commit() #Removed as issue with consumer group id
+            if len(batch) == 10000:
+                #await consumer.commit() #Removed as issue with consumer group id
                 batch = []
                 persist = session.execute_async(statement,batch)
                 persist.add_callbacks(handle_success, handle_error)

@@ -28,7 +28,7 @@ sudo rm -rf ../cassandra/db/
 
 # Remove Docker network
 echo "Remove Docker network"
-sudo docker network rm realtime_healthcare
+sudo docker network rm healthcare_pipeline
 
 echo "Remove any orphan containers"
 sudo docker-compose down --remove-orphans

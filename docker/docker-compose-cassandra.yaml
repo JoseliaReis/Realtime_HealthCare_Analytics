@@ -4,7 +4,7 @@ services:
     image: cassandra:latest
     container_name: cassandra
     volumes:
-      - ../cassandra/db/cassandra_data:/var/lib/cassandra
+      - ./out/cassandra_data:/var/lib/cassandra
     ports:
       - 9042:9042
     environment:
@@ -30,9 +30,9 @@ services:
         condition: service_healthy
     volumes:
       - ../cassandra/cassandra_boostrap.cql:/schema.cql
-    command: /bin/bash -c "echo loading cassandra keyspace && cqlsh cassandra -f /schema.cql"
+    command: /bin/bash -c "echo loading cassandra keyspace && cqlsh cassandra -f schema.cql"
 
 networks:
   default:
     external:
-      name: healthcare_data_pipeline
+      name: healthcare_pipeline
