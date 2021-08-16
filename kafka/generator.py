@@ -38,8 +38,12 @@ fake = Faker() #
 
 
 def generate_seed():
+    """
+    Function generate a random number between 0 and 100 and it
+    will be used to generate more precise emergency alerts
+    :return:
+    """
     # Generate a random number between 0 and 100.
-
     # This is used to weight the emergency readings to a maximum of 1/10th
     seed = randint(0, 100)
 
@@ -57,6 +61,10 @@ def create_unique_id():
 
 
 def create_device_id():
+    """
+    This funtion will create a device it and randomly choose on between 3 options
+    :return:
+    """
 
     devices = ["SMARTWATCH1-", "SMARTWATCH2-", "SMARTWATCH3-"]
 
@@ -154,13 +162,21 @@ def create_blood_sugar_level(emergency=False):
 
 
 def create_phone_number():
+
+    """
+    This function will create a phone number that has +353 as country code and
+    81, 82 , 88 and 84 as prefix
+
+    :return: phone number
+    """
     country_code = "+353"
     prefix = ["-81", "-82", "-88", "-84"]
     digits = ""
+    # generate 7 random number between 0 and 9
     for i in range(7):
         digit = randint(0, 9)
         digits += str(digit)
-
+    # the phone number will be the country code + prefix and the 7 radom number that were generated
     phone_number = country_code + choice(prefix) + "-" + digits
 
     return phone_number
@@ -182,7 +198,7 @@ def create_geolocation(coordinate_type):
 
 def create_dublin_address():
     """
-
+    This funcion will create a fake dublin Address based on the postcodos on Dublin Area
     :return:
     """
     postcodes = ['Dublin 1','Dublin 2', 'Dublin 3', 'Dublin 4', 'Dublin 5', 'Dublin 6',
@@ -191,7 +207,8 @@ def create_dublin_address():
                  'Dublin 19', 'Dublin 20', 'Dublin 21', 'Dublin 22', 'Dublin 23', 'Dublin 24']
 
     street_address = fake.street_address()
-    postcode = choice(postcodes) # Randomly chose one post code
+    # Randomly chose one post code
+    postcode = choice(postcodes)
 
     full_address = street_address + "," + postcode + ", Dublin, Republic of Ireland"
 
@@ -203,6 +220,7 @@ def create_health_status():
     Function to create condition, health_status and BMI
     :return: list of condition, health_status, BMI
     """
+    # choose randomly an number betweeb 18.5 and 40.5 with two digits
     bmi = round(uniform(18.5, 40.5), 2)
     conditions = ['diabetes', 'hypertension', 'heart disease', 'none']
     statuses = ['critical unhealthy', 'stable unhealthy', 'stable healthy', 'emergency']
@@ -223,7 +241,7 @@ def create_health_status():
         else:
             status = 'critical unhealthy'
 
-
+    # create a list with the conditions
     patient_health = [condition, bmi, status]
     return patient_health
 
@@ -234,13 +252,15 @@ def create_time_of_measurement():
     eg. 2021-06-25T15:24:17
     :return: time_of_measurement
     """
-
+    #  empty array list
     list_timestamps = []
-
+    # current time and import the unix time https://www.unixtimestamp.com/
     currentTime = int(round(time.time()))
+    # subtract from the current time 24 hours*60 minutes*60 seconds
     yesterdayTime = currentTime - (24 * 60 * 60)
-
+    # for loop that will loopr between yesterday and today
     for timestamp in range(yesterdayTime, currentTime):
+        # skip every 60 seconds and generate a time stamp as minute
         if timestamp % 60 == 0:
             converted_timestamp = datetime.datetime.utcfromtimestamp(timestamp)
             list_timestamps.append(converted_timestamp)
@@ -250,8 +270,9 @@ def create_time_of_measurement():
 
 def create_patient_content():
     """
+    This function will create a the patient content with all the field names
+    :return: patient_payload
 
-    :return:
     """
     health = create_health_status()
 
@@ -301,6 +322,9 @@ def create_sensor_content(timestamp):
 
 
 def create_emergency_alerts(patient_payload, sensor_payload):
+    """"
+    This function will create the emergency alerts
+    """
 
     # Get the values from the patient payload already generated
     age = patient_payload.get(fieldnames[2])
@@ -353,7 +377,8 @@ def create_emergency_alerts(patient_payload, sensor_payload):
 def write_to_csv():
     """
     This function writes a payload to csv file to view if information is correct
-    :return: writes csv file to hard drive
+    :return: writes csv file to hard drive - It is an option in case the data base does not works.
+
     """
 
     # the ./ means that the code will be stored in the same folder that we are running

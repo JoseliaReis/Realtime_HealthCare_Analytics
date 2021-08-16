@@ -7,7 +7,6 @@ from asyncio import log
 
 from aiokafka.consumer import AIOKafkaConsumer
 
-from cassandra.cluster import Cluster
 from cassandra import ConsistencyLevel
 from cassandra.query import SimpleStatement
 from aiocassandra import aiosession
@@ -18,19 +17,18 @@ from cassandra.auth import PlainTextAuthProvider
 topic =  os.environ.get('SENSOR_TOPIC')
 kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
 kafka_address = "localhost:9092"
-
+print("Connecting to Cassandra DB")
+cluster = Cluster(
+    contact_points=['localhost'],
+    auth_provider=PlainTextAuthProvider(username='cassandra', password='cassandra')
+)
+session = cluster.connect()
 
 async def consume_payload(loop):
     """
     function to consume from topic and persist to database
     """
 
-    print("Connecting to Cassandra DB")
-    cluster = Cluster(
-        contact_points=['127.0.0.1'],
-        auth_provider=PlainTextAuthProvider(username='cassandra', password='cassandra')
-    )
-    session = cluster.connect()
     aiosession(session)
     # non-blocking prepared CQL statement
     query = await session.prepare_future('INSERT INTO healthcare_db.device_patient JSON VALUES (?)')
