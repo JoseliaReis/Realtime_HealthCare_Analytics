@@ -1,100 +1,135 @@
 import os
 import time
-import random
+import pandas as pd
 import json
 import asyncio
 from asyncio import log
-
+from decimal import Decimal
 from aiokafka.consumer import AIOKafkaConsumer
 
 from cassandra import ConsistencyLevel
-from cassandra.query import SimpleStatement
+from cassandra.query import SimpleStatement,BatchStatement
 from aiocassandra import aiosession
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 
+
 #Configuration
-topic =  os.environ.get('SENSOR_TOPIC')
-kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
-kafka_address = "localhost:9092"
-print("Connecting to Cassandra DB")
+topic =  'patient_data'
+#kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
+kafka_broker_url = 'localhost:9092'
+
 cluster = Cluster(
     contact_points=['localhost'],
     auth_provider=PlainTextAuthProvider(username='cassandra', password='cassandra')
 )
 session = cluster.connect()
+session.default_fetch_size = 50000
+session.set_keyspace('healthcare_db')
 
-async def consume_payload(loop):
+def batch_to_cassandra(payload):
+    cql = """INSERT INTO healthcare_db.device_patient(
+                id,name,age,gender,phone,address,
+                condition,bmi,status,device_id,reading_id,heart_rate,
+                blood_pressure_top,blood_pressure_bottom,body_temperature,blood_sugar_level,
+                timestamp,longitude,latitude,alert)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """
+
+    # non-blocking prepared CQL statement
+    query = session.prepare(cql)
+
+    # statement = SimpleStatement(query, consistency_level=ConsistencyLevel.QUORUM)
+    batch = BatchStatement()
+    batch.add(query, [
+        str(payload.get('id')),
+        str(payload.get('name')),
+        int(payload.get('age')),
+        str(payload.get('gender')),
+        str(payload.get('phone')),
+        str(payload.get('address')),
+        str(payload.get('condition')),
+        str(payload.get('bmi')),
+        str(payload.get('status')),
+        str(payload.get('device_id')),
+        str(payload.get('reading_id')),
+        int(payload.get('heart_rate')),
+        int(payload.get('blood_pressure_top')),
+        int(payload.get('blood_pressure_bottom')),
+        str(payload.get('body_temperature')),
+        int(payload.get('blood_sugar_level')),
+        pd.to_datetime(payload.get('timestamp')),
+        str(payload.get('longitude')),
+        str(payload.get('latitude')),
+        str(payload.get('alert'))
+    ])
+    session.execute(batch)
+    print("Loaded Message to Database: {} " + str(payload))
+
+async def aysnc_to_cassandra(payload):
+
+    aiosession(session)
+
+    query = """INSERT INTO healthcare_db.device_patient(
+               id,name,age,gender,phone,address,
+               condition,bmi,status,device_id,reading_id,heart_rate,
+               blood_pressure_top,blood_pressure_bottom,body_temperature,blood_sugar_level,
+               timestamp,longitude,latitude,alert)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               """
+
+    #statement = SimpleStatement(query, fetch_size=100)
+
+    values = [
+        str(payload.get('id')),
+        str(payload.get('name')),
+        int(payload.get('age')),
+        str(payload.get('gender')),
+        str(payload.get('phone')),
+        str(payload.get('address')),
+        str(payload.get('condition')),
+        str(payload.get('bmi')),
+        str(payload.get('status')),
+        str(payload.get('device_id')),
+        str(payload.get('reading_id')),
+        int(payload.get('heart_rate')),
+        int(payload.get('blood_pressure_top')),
+        int(payload.get('blood_pressure_bottom')),
+        str(payload.get('body_temperature')),
+        int(payload.get('blood_sugar_level')),
+        pd.to_datetime(payload.get('timestamp')),
+        str(payload.get('longitude')),
+        str(payload.get('latitude')),
+        str(payload.get('alert'))
+    ]
+    query = await session.prepare(query, values)
+
+    await session.execute_future(query)
+
+
+async def consume_payload():
     """
     function to consume from topic and persist to database
     """
 
     aiosession(session)
-    # non-blocking prepared CQL statement
-    query = await session.prepare_future('INSERT INTO healthcare_db.device_patient JSON VALUES (?)')
-    select = await session.prepare_future('SELECT COUNT(*) healthcare_db.device_patient')
-
     # create consumer object
     consumer = AIOKafkaConsumer(
         topic,
-        loop=loop,
-        bootstrap_servers=kafka_broker_url,
-        #group_id = "sensor_consumer_group", #Removed as issue with consumer group id
         enable_auto_commit=False,
         auto_offset_reset="earliest",
     )
     await consumer.start()
 
-    batch = []
-
     try:
         async for message in consumer:
-            payload = message.value
-            deserialized = lambda value: json.loads(payload)
-            batch.append(payload)
-            statement = SimpleStatement(query, consistency_level=ConsistencyLevel.QUORUM)
-            if len(batch) == 10000:
-                #await consumer.commit() #Removed as issue with consumer group id
-                batch = []
-                persist = session.execute_async(statement,batch)
-                persist.add_callbacks(handle_success, handle_error)
-                async with session.execute_async(statement,batch) as paginator:
-                    async for row in paginator:
-                        persist = session.execute_async(row)
-                        persist.add_callbacks(handle_success, handle_error)
-
-        session.execute_async(SimpleStatement(select))
+            payload = json.loads(message.value.decode('utf-8'))
+            batch_to_cassandra(payload)
     finally:
         await consumer.stop()
 
 
-def handle_success(rows):
-    """function to handle successful callback
-    """
-    payload = rows[0]
-    try:
-        consume_payload(payload.id, payload.type, payload.content)
-    except Exception:
-        log.error("Failed to process payload %s", payload.id)
-        # don't re-raise errors in the callback
-
-def handle_error(exception):
-    """function to handle unsuccessful callback
-    """
-    log.error("Failed to fetch payload info: %s", exception)
-
 
 if __name__ == '__main__':
-   # Setup to properly handle KeyboardInterrupt exception
-    loop = asyncio.get_event_loop()
-    m_task = loop.create_task(consume_payload(loop))
-    m_task.add_done_callback(lambda task, loop=loop: loop.stop())
+    asyncio.run(consume_payload())
 
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        m_task.cancel()
-        loop.run_forever()
-    finally:
-        if not m_task.cancelled():
-            m_task.result()

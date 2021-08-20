@@ -24,13 +24,14 @@ $ docker network create healthcare_pipeline
 
 #STEP 2 - COMPOSE/BUILD THE KAFKA RESOURCES
  Go to docker folder and run the following command 
-$ docker-compose -f docker-compose-kafka.yaml up -d --remove-orphans
+$ docker-compose -f docker-compose-kafka.yaml up
 
-#OPTIONAL STEP - CHECK IF KAFKA STARTED
-$ docker-compose -f docker-compose-kafka.yaml logs -f broker | grep "started"
+OPEN new terminal on docker folder
+
 
 # STEP 3 - COMPOSE/BUILD CASSANDRA DATABASE
-$ docker-compose -f docker-compose-cassandra.yaml up -d --remove-orphans
+
+$ docker-compose -f docker-compose-cassandra.yaml up -d 
 
 
 # STEP 4 - CONNECT TO CASSANDRA
@@ -73,12 +74,27 @@ CREATE TABLE IF NOT EXISTS healthcare_db.device_patient(
   PRIMARY KEY ((id), timestamp))
 WITH CLUSTERING ORDER BY (timestamp DESC);
 
+## STEP 8 - Create Topic in Kafka
+$ docker exec -it kafka /bin/sh
 
+$ cd /opt/kafka_2.13-2.7.0/
 
-## STEP 8 - Import Data to Cassandra for testing
-go to cassandra folder
-run - python import_to_cassandra.py
+$ ./bin/kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic patient_data
 
+$ ./bin/kafka-topics.sh --list --zookeeper zookeeper:2181
+
+$ exit
+
+## STEP 8 - Run the Producer & Consumer
+$ cd ../kafka/
+
+$ python producer.py 
+
+$ python consumer.py
+
+# while this is running check the database records
+
+select count(*) from healthcare_db.device_patient;
 
 # STEP 9 - Run the Dashboard
 python dashboard.py

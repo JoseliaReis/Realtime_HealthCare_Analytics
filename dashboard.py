@@ -27,7 +27,9 @@ server = app.server
 
 
 # --------- LOAD DATA --------- #
-
+"""
+Use cassandra to load the data
+"""
 source = "cassandra"
 
 if source == 'cassandra':
@@ -92,8 +94,8 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.A(
-                            html.Button("Learn More", id="learn-more-button"),
-                            href="https://plot.ly/dash/pricing/",
+                            html.Button("Contact me", id="learn-more-button"),
+                            href="https://www.linkedin.com/in/joseliareis/",
                         )
                     ],
                     className="one-third column",

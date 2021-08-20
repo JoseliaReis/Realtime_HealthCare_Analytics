@@ -3,20 +3,26 @@ import random
 import json
 import asyncio
 from aiokafka.producer import AIOKafkaProducer
-import generator 
+import generator
+import datetime
+
 #Configuration
-topic = os.environ.get('SENSOR_TOPIC')
-kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
+topic =  'patient_data'
+#kafka_broker_url = os.environ.get('KAFKA_BROKER_URL')
+kafka_broker_url = 'localhost:9092'
 
-
+def myconverter(o):
+    if isinstance(o, datetime.datetime):
+        return o.__str__()
 
 def serializer(data):
     """
     function to serialize dict to json
     """
-    return json.dumps(data).encode()
+    return json.dumps(data, default=myconverter).encode()
 
-async def produce_payload(loop):
+
+async def produce_payload():
     """
     function to transform payload and batch append to kafka producer
     """
@@ -24,10 +30,7 @@ async def produce_payload(loop):
     patient_count = generator.patient_count
     timestamps = generator.create_time_of_measurement()
 
-    producer = AIOKafkaProducer(
-        bootstrap_servers=kafka_broker_url,
-        loop=loop,
-    )
+    producer = AIOKafkaProducer()
     await producer.start()
 
     batch = producer.create_batch()
@@ -64,9 +67,6 @@ async def produce_payload(loop):
     await producer.stop()
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(produce_payload(loop))
-    print("Adding Messages")
-    loop.close()
+    asyncio.run(produce_payload())
 
 

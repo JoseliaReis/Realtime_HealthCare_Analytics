@@ -18,12 +18,16 @@ df_input3= pd.read_csv(str(DATA_PATH) + "/test_data3.csv")
 df_input4 = pd.read_csv(str(DATA_PATH) + "/test_data4.csv")
 
 
-#@TODO Brian
 def test_read_cassandra():
     pass
 
 
 def test_get_total_counts():
+
+    """
+    This function will call all get total counts funcion an test if the total of patients,
+    readings, alerts, emergencies and warnings are as expected.
+     """
     # call the get_total_counts function by passing test_df_1 and store the results as the variables
     patients, readings, alerts, emergencies, warnings = utils.get_total_counts(df_input1)
 
@@ -35,19 +39,23 @@ def test_get_total_counts():
 
 
 def test_get_alert_counts():
+    """
+    This function will call all get total counts funcion an test if the total of hypertension, hypothermia,
+    hyperthermia, fever, hyperglycemia and tachycardia are as expected.
+    """
     hypertension, hypothermia, hyperthermia, fever, hyperglycemia, tachycardia = utils.get_alert_counts(df_input1)
 
-    assert hypertension == 185  # We expect to have 185 hypertension alerts
-    assert hypothermia == 642  # We expect to have 642 hypothermia alerts
-    assert hyperthermia == 1  # We expect to have 1 hyperthermia alerts
-    assert fever == 936  # We expect to have 936 fever alerts
-    assert hyperglycemia == 1216  # We expect to have 1216 hyperglycemia alerts
-    assert tachycardia == 1  # We expect to have 1 tachycardia alerts
+    assert hypertension == 185
+    assert hypothermia == 642
+    assert hyperthermia == 1
+    assert fever == 936
+    assert hyperglycemia == 1216
+    assert tachycardia == 1
 
 
 def test_create_alert_table_instance():
     """
-    Test that the object returned (df) by the function is a dataframe (isinstance)
+    This funcion will test that the object returned (df) by the function is a dataframe (isinstance)
     """
 
     # Run the function with the input data csv to create the dataframe from the create_alert_table function
@@ -58,7 +66,7 @@ def test_create_alert_table_instance():
 
 def test_create_alert_table_columns():
     """
-    Test that the columns returned are timestamp, name, phone, alert, latitude, longitude
+    This funcion will test that the columns returned are timestamp, name, phone, alert, latitude, longitude
     """
 
     # load result data file as a dataframe. We use these to test the dataframe functions output matches the input
@@ -74,7 +82,7 @@ def test_create_alert_table_columns():
 
 def test_create_alert_table_matching():
     """
-    Test that the actual dataframe matches the expected dataframe
+    This funcion will test that the actual dataframe matches the expected dataframe
     :return:
     """
     # load result data file as a dataframe. We use these to test the dataframe functions output matches the input
@@ -88,7 +96,7 @@ def test_create_alert_table_matching():
 
 def test_filter_dataframe_instance():
     """
-    Test that the object returned (df) by the function is a dataframe (isinstance)
+    This funcion will test that the object returned (df) by the function is a dataframe (isinstance)
     :return:
     """
     # -------- Test 1 -------- #
@@ -106,6 +114,8 @@ def test_filter_dataframe_instance():
 
 def test_filter_dataframe_matching_one():
     """
+    This funcion will test that the object returned (df) by the function is a dataframe (isinstance) matches with the input
+
     :return:
     """
 
@@ -130,6 +140,7 @@ def test_filter_dataframe_matching_one():
 
 def test_filter_dataframe_matching_two():
     """
+    This function will test that the object returned (df) by the function is a data frame (isinstance) matches with the input
     :return:
     """
     # load result data file as a dataframe. We use these to test the dataframe functions output matches the input
@@ -154,6 +165,7 @@ def test_filter_dataframe_matching_two():
 
 def test_filter_dataframe_matching_three():
     """
+    This function will test that the object returned (df) by the function is a data frame (isinstance) matches with the input.
     :return:
     """
 
@@ -178,6 +190,11 @@ def test_filter_dataframe_matching_three():
 
 
 def test_get_bmi_segment():
+    """
+    This function will test that the expected series returned matches with the expected data
+
+    :return:
+    """
 
     #Prepare the expected data as a Pandas Series
     expected_data = {'Extremely Obese': 24, 'Normal': 32, 'Obese': 30, 'Overweight': 14}
@@ -192,6 +209,9 @@ def test_get_bmi_segment():
 
 
 def test_get_age_segment():
+    """
+    This function will test that the expected series returned matches with the expected data
+    """
 
     #Prepare the expected data as a Pandas Series
     expected_data = {'18 to 39': 44, '40 to 49': 14, '50 to 59': 25, '60 to 69': 17}
@@ -206,6 +226,11 @@ def test_get_age_segment():
 
 
 def test_get_existing_gender_segments():
+    """
+    This function will test that the expected series returned matches with the expected data that is female and male
+
+    :return:
+    """
     #Prepare the expected data as a Pandas Series
     expected_data = {'Female': 47, 'Male': 53}
 
@@ -219,6 +244,11 @@ def test_get_existing_gender_segments():
 
 
 def test_get_existing_health_segments():
+    """
+    This function will test that the expected series returned matches with the expected data
+    that is critical unhealthy, stable healthy, stable unhealthy.
+    """
+
     #Prepare the expected data as a Pandas Series
     expected_data = {'critical unhealthy':40, 'stable healthy':10, 'stable unhealthy':50}
 
@@ -233,6 +263,11 @@ def test_get_existing_health_segments():
 
 
 def test_get_existing_disease_segments():
+    """
+    This function will test that the expected series returned matches with the expected data that
+     is diabetes, heart disease, hypertension and none
+    """
+
     #Prepare the expected data as a Pandas Series
     expected_data = {'diabetes': 32, 'heart disease': 28,'hypertension': 16, 'none': 24}
 
@@ -246,6 +281,10 @@ def test_get_existing_disease_segments():
 
 
 def test_get_postcode_segment():
+    """
+    This function will test that the expected series returned matches with
+    the expected data that is Dublin 15 and Dublin 3.
+    """
     #Prepare the expected data as a Pandas Series
     expected_data = {'Dublin 15': 1, 'Dublin 3': 1}
 
@@ -259,6 +298,11 @@ def test_get_postcode_segment():
 
 
 def test_produce_health_stats():
+    """
+    This function will test that the expected series returned matches with the expected data that is
+    index, timestamp, heart-rate, body temperature and blood sugar.
+    :return:
+    """
 
     # Create the expected outputs
     expected_index = [0, 1, 2, 3, 4]
@@ -279,6 +323,11 @@ def test_produce_health_stats():
 
 
 def test_produce_blood_pressure():
+
+    """
+    This function will test that the expected series returned matches with the expected data that is index,
+    timestamp, blood pressure top and blood pressure bottom.
+    """
     # Create the expected outputs
     expected_index = [0, 1, 2, 3, 4]
     expected_timestamp = ['2021-08-05 16:18:00', '2021-08-05 19:53:00', '2021-08-04 23:38:00',

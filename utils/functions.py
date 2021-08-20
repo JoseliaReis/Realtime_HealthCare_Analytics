@@ -98,7 +98,9 @@ def create_alert_table(df):
     # keep only the columns we need
     df = df[['timestamp','name', 'phone', 'alert', 'latitude', 'longitude']]
     # select/slice from the dataframe where alert does not equal '' (is not empty)
+    df = df[df['alert'] != 'None']
     df = df[df['alert'] != '']
+
     
     return df
 
