@@ -19,7 +19,7 @@ Description Here
 
 ### End-to-End-Flow
 Description Here
-![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/data_flow.jpg.jpg "How Data is generated in project")
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/data_flow.jpg "How Data is generated in project")
 
 ## Data Manipulation
 Description Here
