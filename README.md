@@ -1,3 +1,9 @@
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/assets/dash.png">
+</p>
+
+
 # About
 
 
