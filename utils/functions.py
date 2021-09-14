@@ -97,10 +97,15 @@ def create_alert_table(df):
     """
     # keep only the columns we need
     df = df[['timestamp','name', 'phone', 'alert', 'latitude', 'longitude']]
+
     # select/slice from the dataframe where alert does not equal '' (is not empty)
     df = df[df['alert'] != 'None']
     df = df[df['alert'] != '']
 
+    conditions = [(df['alert'].str.contains("EMERGENCY")), (df['alert'].str.contains("WARNING"))]
+
+    values = ['Emergency', 'Warning']
+    df["type"] = np.select(conditions, values)
     
     return df
 
@@ -117,14 +122,43 @@ def create_alert_graph(df):
     df = df.sort_values('timestamp', ascending=False)
     df['timestamp'] = df['timestamp'].dt.strftime('%Y-%m-%d %H:%M')
 
+    # Update the columns to have capital letter as first letter
+    df.columns = df.columns.str.title()
+    
     table = dash_table.DataTable(
         id='alert-table',
         columns=[{"name": i, "id": i} for i in df.columns],
         data=df.to_dict('records'),
         sort_action="native",
         style_table={'overflowX': 'auto'},
+        style_data={'font-family': 'Open Sans'},
         sort_mode='single',
-        page_size=20
+        page_size=20,
+        style_header={
+        'backgroundColor': '#404e68',
+        'color':'#FFFFFF',
+        'font-size': '16px',
+          'font-family': 'Open Sans',
+
+    },
+    style_data_conditional=[
+        {
+            'if': {
+                'filter_query': '{{Type}} = {}'.format('Emergency'),
+
+            },
+            'backgroundColor': '#FFFFFF',
+            'color': '#be1558'
+        },#fff586
+        {
+            'if': {
+                'filter_query': '{{Type}} = {}'.format('Warning'),
+
+            },
+            'backgroundColor': '#FFFFFF',
+            'color': '#434343'
+        }
+        ]
     )
     return table
 

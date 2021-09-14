@@ -25,7 +25,6 @@ app = dash.Dash(__name__,
 app.title = "RTHCA: Realtime Healthcare Analytics "
 server = app.server
 
-
 # --------- LOAD DATA --------- #
 """
 Use cassandra to load the data
@@ -47,7 +46,7 @@ hypertension, hypothermia, hyperthermia, fever, hyperglycemia, tachycardia = uti
 layout = dict(autosize=True, automargin=True, margin=dict(l=30, r=30, b=20, t=40), hovermode="closest",
               plot_bgcolor="#F9F9F9", paper_bgcolor="#F9F9F9", title="Location of Sensor Readings",
               legend=dict(font=dict(size=10), orientation="h"),marker = {'size': 12},
-              mapbox=dict(accesstoken=config.mapbox_access_token, style="streets", center=dict(lon=-6.317, lat=53.335), zoom=11),
+              mapbox=dict(accesstoken=config.mapbox_access_token, style="light", center=dict(lon=-6.317, lat=53.335), zoom=11),
               )
 
 # Create app layout
@@ -61,13 +60,14 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.Img(
-                            src=app.get_asset_url("dash_logo.jpeg"),
+                            src=app.get_asset_url("dash.png"),
                             id="plotly-image",
                             style={
                                 "height": "auto",
                                 "width": "auto",
-                                "margin-top": "5px",
-                                "margin-bottom": "5px",
+                                "padding": "5px",
+                                "margin-top": "0px",
+                                "margin-bottom": "0px",
                             },
                         )
                     ],
@@ -76,16 +76,7 @@ app.layout = html.Div(
                 html.Div(
                     [
                         html.Div(
-                            [
-                                html.H1(
-                                    "Realtime HealthCare Analytics",
-                                    style={"margin-bottom": "0px"}
-,
-                                ),
-                                html.H5(
-                                    "Automated Dashboard for Patient Health Monitoring", style={"margin-top": "0px"}
-                                ),
-                            ]
+                           
                         )
                     ],
                     className="one-half column",
@@ -93,18 +84,54 @@ app.layout = html.Div(
                 ),
                 html.Div(
                     [
-                        html.A(
-                            html.Button("Contact me", id="learn-more-button"),
-                            href="https://www.linkedin.com/in/joseliareis/",
+			html.Img(
+                            src=app.get_asset_url("email.png"),
+                            id="email-image",
+                            style={
+                                "height": "auto",
+                                "width": "auto",
+                                "margin-top": "0px",
+                                "margin-bottom": "0px",
+                                "float": "right",
+                                "padding": "5px",
+                                "title":"My Github",
+                            },
+                        ),
+                        html.Img(
+                            src=app.get_asset_url("linkedin.png"),
+                            id="linkedin-image",
+                            style={
+                                "height": "auto",
+                                "width": "auto",
+                                "margin-top": "0px",
+                                "float": "right",
+                                "padding": "5px",
+                                "margin-bottom": "0px",
+                                "title":"My Github",
+                            },
+                        ),
+                        html.Img(
+                            src=app.get_asset_url("github.png"),
+                            id="github-image",
+                            style={
+                                "height": "auto",
+                                "width": "auto",
+                                "float": "right",
+                                "padding": "5px",
+                                "margin-top": "0px",
+                                "margin-bottom": "0px",
+                                "title":"My Github",
+                            },
                         )
                     ],
+                    
                     className="one-third column",
                     id="button",
                 ),
             ],
             id="header",
             className="row flex-display",
-            style={"margin-bottom": "0px",'backgroundColor': '#FFFFFF'},
+            style={"margin-bottom": "0px", 'font-color': 'white'},
         ),
         html.Div(
             [
@@ -311,101 +338,141 @@ app.layout = html.Div(
                     id="cross-filter-options",
                 ),
                 html.Div(
-                    [
+                    [html.P("Overview of Healthcare Data", className="control_label"),
                         html.Div(
                             [
                                 html.Div(
-                                    [html.H6(id="numberPatients"), html.P("Number of Patients"),
-                                     html.Strong(str(total_patients), style={'font-size': '20px'})],
+                                    [ html.Strong(str(total_patients), style={'font-size': '40px'})
+                                    ,html.H6(id="numberPatients"),
+                                    html.P("Total Patients"),
+                                    ],
                                     id="patients",
-                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
+                                    style={'background': config.gradient_green}
                                 ),
                                 html.Div(
-                                    [html.H6(id="numberReadings"),
-                                     html.P("Number of Sensor Readings"),
-                                     html.Strong(str(total_readings), style={'font-size': '20px'})],
+                                    [html.Strong(str(total_readings), style={'font-size': '40px'}),
+                                    html.H6(id="numberReadings"),
+                                     html.P("Sensor Readings Recorded")
+                                     ],
                                     id="readings",
-                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
+                                    style={'background': config.gradient_green}
                                 ),
                                 html.Div(
-                                    [html.H6(id="numberAlerts"),html.P("Total Alerts Detected"),
-                                     html.Strong(str(total_alerts),style={'font-size': '20px'})],
-                                    id="alerts",style={'backgroundColor': '#1289c9', 'opacity': 0.9},
+                                    [html.Strong(str(total_alerts), style={'font-size': '40px'}),
+                                    html.H6(id="numberAlerts"),html.P("Total Alerts Detected")
+                                    ],
                                     className="mini_container",
+                                    style={'background': config.gradient_green}
                                 ),
                                 html.Div(
-                                    [html.H6(id="numberEmergencies"), html.P("Total Emergencies Reported"),
-                                     html.Strong(str(total_emergencies),style={'font-size': '20px'})],
+                                    [html.Strong(str(total_emergencies),style={'font-size': '40px'}),
+                                    html.H6(id="numberEmergencies"), 
+                                    html.P("Total Emergencies Reported")
+                                     ],
                                     id="emergencies",
-                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
+                                    style={'background': config.gradient_green}
                                 ),
                                 html.Div(
-                                    [html.H6(id="numberWarnings"), html.P("Total Warnings Reported"),
-                                     html.Strong(str(total_warnings),style={'font-size': '20px'})],
+                                    [html.Strong(str(total_warnings),style={'font-size': '40px'}),
+                                    html.H6(id="numberWarnings"), 
+                                    html.P("Total Warnings Reported")
+                                     ],
                                     id="warnings",
-                                    style={'backgroundColor': '#1289c9', 'opacity': 0.9},
                                     className="mini_container",
+                                    style={'background': config.gradient_green}
                                 ),
-
+                            
                             ],
                             id="info-container",
-                            style={'color': '#FFFFFF', 'opacity': 0.9},
+                            style={'color': '#FFFFFF', 'opacity': 0.9, 'align': 'center'},
                             className="row container-display",
-                        ),
-                        html.P("Detected Patient Alerts", className="control_label"),
-                        html.Div(util.create_alert_graph(df),
-                        ),
-                        html.Div(
+                        ),html.P("Breakdown of Detected Alerts", className="control_label"),
+                            html.Div(
                             [
                                 html.Div(
-                                    [html.H6(id="numHypertension"), html.P("Hypertension Alerts"),
-                                     html.Strong(str(hypertension), style={'font-size': '20px'})],
+                                    [
+                                        html.Strong(str(hypertension), style={'font-size': '25px'}),
+                                        html.H6(id="numHypertension"),
+                                        html.P("Hypertension",style={'font-size': '16px'}),
+                                    ],
                                     id="hypertension",
-                                    style={'backgroundColor': '#bae5ff'},
+                                    style={'background': config.gradient_red,
+                                           'color': '#FFFFF'},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="numHypothermia"), html.P("Hypothermia Alerts"),
-                                     html.Strong(str(hypothermia), style={'font-size': '20px'})],
+                                    [
+                                        html.Strong(str(hypothermia), style={'font-size': '25px'}),
+                                        html.H6(id="numHypothermia"),
+                                        html.P("Hypothermia",style={'font-size': '16px'}),
+                                    ],
                                     id="hypothermia",
-                                    style={'backgroundColor': '#bae5ff'},
+                                    style={'background': config.gradient_red,
+                                           'color': '#FFFFF'},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="numHyperthermia"), html.P("Hyperthermia Alerts"),
-                                     html.Strong(str(hyperthermia), style={'font-size': '20px'})],
+                                    [
+                                        html.Strong(str(hyperthermia), style={'font-size': '25px'}),
+                                        html.H6(id="numHyperthermia"),
+                                        html.P("Hyperthermia",style={'font-size': '16px'}),
+                                    ],
                                     id="hyperthermia",
-                                    style={'backgroundColor': '#bae5ff'},
+                                    style={'background': config.gradient_red,
+                                           'color': '#FFFFF'},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="numFever"), html.P("Fever Alerts"),
-                                     html.Strong(str(fever), style={'font-size': '20px'})],
-                                    id="fever",
-                                    style={'backgroundColor': '#bae5ff'},
-                                    className="mini_container",
-                                ),
-                                html.Div(
-                                    [html.H6(id="numHyperglycemia"), html.P("Hyperglycemia Alerts"),
-                                     html.Strong(str(hyperglycemia), style={'font-size': '20px'})],
+                                    [
+                                        html.Strong(str(hyperglycemia), style={'font-size': '25px'}),
+                                        html.H6(id="numHyperglycemia"),
+                                        html.P("Hyperglycemia",style={'font-size': '16px'}),
+                                    ],
                                     id="hyperglycemia",
-                                    style={'backgroundColor': '#bae5ff'},
+                                    style={
+                                        'background': config.gradient_red,
+                                        'color': '#FFFFF'},
                                     className="mini_container",
                                 ),
                                 html.Div(
-                                    [html.H6(id="numTachycardia"), html.P("Tachycardia Alerts"),
-                                     html.Strong(str(tachycardia), style={'font-size': '20px'})],
+                                    [
+                                        html.Strong(str(fever), style={'font-size': '25px'}),
+                                        html.H6(id="numFever"),
+                                        html.P("Fever/Pyrexia",style={'font-size': '16px'}),
+                                    ],
+                                    id="fever",
+                                    style={
+                                           'background': config.gradient_yellow,
+                                           'color': '#FFFFF'},
+                                    className="mini_container",
+                                ),
+                                html.Div(
+                                    [
+                                        html.Strong(str(tachycardia), style={'font-size': '25px'}),
+                                        html.H6(id="numTachycardia"),
+                                        html.P("Tachycardia",style={'font-size': '16px'}),
+                                     ],
                                     id="tachycardia",
-                                    style={'backgroundColor': '#bae5ff'},
+                                    style={
+                                           'background': config.gradient_yellow,
+                                           'color': '#FFFFF'},
                                     className="mini_container",
                                 ),
                             ],
                             id="info-container2",
+                            style={'color': '#FFFFFF', 'opacity': 0.9},
                             className="row container-display",
                         ),
+                     html.Br(),
+                        html.P("Detected Patient Alerts", className="control_label"),
+                     html.Br(),
+
+                        html.Div(util.create_alert_graph(df),style={'margin-top': '10px'}
+                        ),
+                    
 
                     ],
                     id="right-column",
@@ -586,8 +653,8 @@ def make_person_health_figure(main_graph_hover):
                 name="Heart Rate (bpm)",
                 x=timestamp,
                 y=heart_rate,
-                line=dict(shape="spline", smoothing=2, width=1, color="#fac1b7"),
-                marker=dict(symbol="diamond-open"),
+                line=dict(shape="spline", smoothing=2, width=1, color="#5bbafa"),
+                marker=dict(symbol="circle")
             ),
             dict(
                 type="scatter",
@@ -595,8 +662,8 @@ def make_person_health_figure(main_graph_hover):
                 name="Body Temperature (Celsius)",
                 x=timestamp,
                 y=body_temperature,
-                line=dict(shape="spline", smoothing=2, width=1, color="#f799a2"),
-                marker=dict(symbol="diamond-open"),
+                line=dict(shape="spline", smoothing=2, width=1, color="#ffcf93"),
+                marker=dict(symbol="circle"),
             ),
             dict(
                 type="scatter",
@@ -604,8 +671,8 @@ def make_person_health_figure(main_graph_hover):
                 name="Blood Sugar mg/DL",
                 x=timestamp,
                 y=blood_sugar,
-                line=dict(shape="spline", smoothing=2, width=1, color="#92d8d8"),
-                marker=dict(symbol="diamond-open"),
+                line=dict(shape="spline", smoothing=2, width=1, color="#f8a5af"),
+                marker=dict(symbol="circle")
             ),
         ]
         layout_individual["title"] = name[0]
@@ -652,18 +719,18 @@ def make_blood_pressure_figure(main_graph_hover):
                 name="Systolic Blood Pressure",
                 x=timestamp,
                 y=blood_pressure_top,
-                line=dict(shape="spline", smoothing=2, width=1, color="#F9ADA0"),
-                marker=dict(symbol="diamond-open"),
+                line=dict(shape="spline", smoothing=2, width=1, color="#a48afa"),
+                marker=dict(symbol="circle"),
             ),
 
             dict(
                 type="lines+markers",
-                mode="lines",
+                mode="lines+markers",
                 name="Diastolic Blood Pressure",
                 x=timestamp,
                 y=blood_pressure_bottom,
-                line=dict(shape="spline", smoothing=2, width=1, color="#849E68"),
-                #marker=dict(symbol="diamond-open"),
+                line=dict(shape="spline", smoothing=2, width=1, color="#dfb0ff"),
+                marker=dict(symbol="circle"),
             ),
         ]
 
@@ -682,31 +749,31 @@ def generate_segment_charts(names):
         segment = util.get_bmi_segment(df)
         fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="BMI",
                                      hole=.4, hoverinfo="label+percent+name+value",
-                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#f9f9f9', width=1)))])
 
     if names == 'Patients by Health Status':
         segment = util.get_existing_segments(df, 'status')
         fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Health",
                                      hole=.6, hoverinfo="label+percent+name+value",
-                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#f9f9f9', width=1)))])
 
     if names == 'Patients by Age':
         segment = util.get_age_segment(df)
         fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Age",
                                      hoverinfo="label+percent+name+value",
-                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#f9f9f9', width=1)))])
 
     if names == 'Patients by Condition':
         segment = util.get_existing_segments(df, 'condition')
         fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Condition",
-                                     hoverinfo="label+percent+name+value", pull =[0.05, 0.05, 0.05, 0.05],
-                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
+                                     hoverinfo="label+percent+name+value",
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#f9f9f9', width=1)))])
 
     if names == 'Patients by Gender':
         segment = util.get_existing_segments(df,'gender')
         fig = go.Figure(data=[go.Pie(labels=segment.index.values, values=segment.values, name="Gender",
                                      hole=.25, hoverinfo="label+percent+name+value",
-                                     marker=dict(colors=config.color_map_small, line=dict(color='#474747', width=1)))])
+                                     marker=dict(colors=config.color_map_small, line=dict(color='#f9f9f9', width=1)))])
 
     if names == 'Patients by Postcode':
         segment = util.get_postcode_segment(df)
@@ -719,7 +786,7 @@ def generate_segment_charts(names):
 
 # Main
 if __name__ == "__main__":
-    app.run_server(debug=False)
+    app.run_server(debug=True)
     #app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False)
 
 
