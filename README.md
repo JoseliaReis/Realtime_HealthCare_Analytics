@@ -1,4 +1,7 @@
-# Modules Used
+# About
+
+
+## Modules Used
 * aiokafka - Asynchronous Kafka Streaming
 * asyncio - Asynchronous Python Threading
 * aiomysl 
@@ -6,19 +9,56 @@
 * aiocassandra - Asynchronous Cassandra Writing
 
 
-# Docker Installation
+# Demonstration
+The following are screenshots for the app in this repo.
+
+Main Dashboard & Callback Graph Navigation:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/main.gif "Systems Architecture for Project")
+
+Alert Table:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/dash_table.gif "Systems Architecture for Project")
+
+Sensor Reading Map:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/map.gif "Systems Architecture for Project")
+
+Filtering the Map:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/changes.gif "Systems Architecture for Project")
+
+Heart Rate, Body Temperature and Bloog Sugar Graphs:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/health_stats.gif "Systems Architecture for Project")
+
+
+Blood Pressure Graphs:
+
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/bloodpressure.gif "Systems Architecture for Project")
+
+All Patient Stats:
+![alt text](https://raw.githubusercontent.com/JoseliaReis/Realtime_HealthCare_Analytics/master/diagrams/screencaptures/pie_charts.gif "Systems Architecture for Project")
+
+# Project Diagrams
+To view diagrams and schematics for the project please view this link: https://github.com/JoseliaReis/Realtime_HealthCare_Analytics/tree/master/diagrams
+
+
+# Installation
+
+## Clone Repo
+
+
+## Setup Prerequisities
 
 ## Install Docker
 
-## 1 Install Docker-compose
+## Install Docker-compose
 $ sudo curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 
 $ sudo chmod +x /usr/local/bin/docker-compose
 
 $ docker–compose -–version
 
+## Install requirements
 
-# How to Run
+
+# Running Project
 
 ## Deployment/Destroy Clusters + APP
 
@@ -87,8 +127,9 @@ $ docker rm container cassandra
 ### Remove Docker network
 $ docker network rm healthcare_pipeline
 
-## Current Outstanding Bugs
-* Cassandra Hostname refused connection continues to work intermittently, could not fix without further time spent on debugging.
 
-## Outstanding TODO
-* Unittesting
+# Testing
+
+
+# Outstanding TODO/Issues
+
